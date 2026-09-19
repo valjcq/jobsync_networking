@@ -54,3 +54,7 @@ Deleting the interaction that set **Last contacted** puts it back to the date of
 Their interactions go with them. The confirmation says how many interactions will be deleted. If you only want to remove one conversation, delete that interaction from the timeline instead.
 
 Interactions are part of the backup you can export under **Settings → Data**, and come back with it.
+
+## Can my AI agent log interactions for me?
+
+Yes. A connected agent can find a contact, add one, log an interaction and list your due follow-ups. Interactions it logs appear on the timeline like any other. See [MCP Access](./mcp.md) for the tools and for the token scope they need.

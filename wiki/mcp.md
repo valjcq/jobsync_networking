@@ -1,9 +1,9 @@
 ---
 type: how-to
 title: MCP Access
-description: Connecting an external AI agent such as Claude Desktop to JobSync over MCP — generating a token, adding the connector, the tools an agent gets, and the limits.
+description: Connecting an external AI agent such as Claude Desktop or Claude Code to JobSync over MCP — generating a token, adding the connector, the thirteen tools an agent gets, and the limits.
 feature: mcp
-tags: [mcp, claude desktop, agent, connector, personal access token, integration, add job from chat, mcp-remote, streamable-http, token, revoke]
+tags: [mcp, claude desktop, claude code, networking, networking:write, scope, agent, connector, personal access token, integration, add job from chat, mcp-remote, streamable-http, token, revoke]
 aliases: [model context protocol, connect claude, claude desktop integration, api token, personal access token, agent access, external agent]
 status: stable
 stale_after: 2027-09-02
@@ -13,7 +13,7 @@ stale_after: 2027-09-02
 
 ## What can an AI agent do with JobSync over MCP?
 
-It can add and correct jobs, add Question Bank entries, and save a job-match or resume review that it produced itself. JobSync runs a built-in MCP (Model Context Protocol) server, so a chat client such as Claude Desktop can write to your tracker without you switching to the app — paste a posting into your agent and ask it to add the job, and the company, title, location, source and tags resolve against your existing lists.
+It can add and correct jobs, add Question Bank entries, save a job-match or resume review that it produced itself, and keep your networking up to date: add contacts, log interactions and list the follow-ups that are due. JobSync runs a built-in MCP (Model Context Protocol) server, so a chat client such as Claude Desktop can write to your tracker without you switching to the app — paste a posting into your agent and ask it to add the job, and the company, title, location, source and tags resolve against your existing lists.
 
 Two things stay in your control. Every connection needs a personal access token you generate yourself, and each token is named — jobs it creates carry that name as their source, and an agent can only edit jobs that were created through MCP in the first place. Nothing an agent does can overwrite a job you curated in the app.
 
@@ -53,7 +53,7 @@ Save the file and restart Claude Desktop fully — quit the app, don't just clos
 
 ## How do I connect a client other than Claude Desktop?
 
-Use the streamable-HTTP snippet instead — clients such as OpenClaw and Hermes speak that transport natively and need no bridge:
+Use the streamable-HTTP snippet instead — clients such as OpenClaw and Hermes speak that transport natively and need no bridge. Claude Code does too; it is configured with a command rather than a file, shown under [the scope section](#why-do-the-networking-tools-say-insufficient-scope) below:
 
 ```json
 {
@@ -71,7 +71,7 @@ Both snippets are shown in the token dialog with your real URL and token already
 
 ## Which tools does a connected agent get?
 
-Nine, all of them writes to your own data:
+Thirteen, all of them acting on your own data:
 
 - **add_job** — adds a job, resolving or creating company, title, location, source and tags by name, and reporting back what it matched versus created.
 - **add_jobs_batch** — the same thing for up to 10 jobs in one call, for a scheduled run.
@@ -81,7 +81,36 @@ Nine, all of them writes to your own data:
 - **review_resume** / **save_resume_review** — hands the agent your default resume and reviewing instructions, then stores the review it writes.
 - **save_match_result** / **save_match_results_batch** — stores a job-fit analysis the agent produced after adding a job.
 
-Tokens are issued with the scopes needed for all of these, so there is nothing to configure per tool.
+The four networking tools work on your [Contacts](./contacts.md) and [Networking](./networking.md) data:
+
+- **find_contact** — looks up saved contacts by name, email or title. The agent calls it first, to get the contact's id. If several people match, or only part of a name does, it shows you the candidates instead of choosing for you.
+- **add_contact** — adds a person, resolving or creating company, location and role by name. It refuses a contact whose name, email or LinkedIn URL matches an existing one and returns the matches; the agent adds it anyway only after you confirm it is a different person.
+- **log_interaction** — records a conversation with a saved contact, with an optional outcome and next step. The purpose is matched against your list and created if it is missing. Logging the same contact, date, purpose and outcome twice returns the existing entry instead of a duplicate, unless you confirm it is a separate one. **Last contacted** moves forward exactly as it does when you log the interaction yourself.
+- **list_followups** — lists the next steps that are due today or earlier, oldest first. It only reads.
+
+Dates go through MCP as `YYYY-MM-DD` and are read in the server's local time zone, the same day you would pick in the app.
+
+Tokens are issued with the scopes needed for all of these, so there is nothing to configure per tool. The one exception is a token created before the networking tools existed — see the next section.
+
+## Why do the networking tools say "Insufficient scope"?
+
+The networking tools need the **networking:write** scope, which applies to all four, including the read-only ones. Tokens generated before the networking tools were added do not have it, and the scope cannot be added to an existing token. The other nine tools keep working with such a token, but a networking call fails with "Insufficient scope. Required: networking:write".
+
+The **Scopes** column on **Settings → MCP Access** shows what each token holds. To fix an older token, generate a new one, put it in your client, then revoke the old one (see [below](#how-do-i-revoke-a-token-or-see-which-agent-added-a-job)). Use the same name so the source on new jobs stays the same. Revoking does not delete anything the old token created.
+
+How you swap the token depends on the client:
+
+- **Claude Desktop** — replace the token in `claude_desktop_config.json` and restart the app fully.
+- **Claude Code** — remove the old connector and add it again with the new token:
+
+  ```bash
+  claude mcp remove jobsync
+  claude mcp add --transport http jobsync http://<your-jobsync-url>/api/mcp \
+    --header "Authorization: Bearer <your-new-token>"
+  ```
+
+  Both commands default to the `local` scope, the current project only. If you added the connector for all your projects, add `--scope user` to both; for a shared project file, `--scope project`. Start a new Claude Code session afterwards so it picks up the change.
+- **Other clients** — replace the token in the `headers` entry of the config and restart the client.
 
 ## How do I get a job match or resume review from my agent?
 
