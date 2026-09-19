@@ -43,7 +43,7 @@ export async function createMcpToken(input: {
         name: input.name.trim(),
         tokenHash: hash,
         tokenPrefix: prefix,
-        scopes: JSON.stringify(["jobs:write", "questions:write", "resume:write"]),
+        scopes: JSON.stringify(["jobs:write", "questions:write", "resume:write", "networking:write"]),
         expiresAt,
       },
     });

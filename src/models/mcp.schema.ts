@@ -237,3 +237,134 @@ export const McpSaveMatchResultsBatchSchema = z.object({
 export type McpSaveMatchResultsBatchInput = z.infer<
   typeof McpSaveMatchResultsBatchSchema
 >;
+
+// Networking tools. Dates are plain strings on purpose: the handlers parse
+// YYYY-MM-DD at server-local midnight (as the UI does) and reject anything
+// else with a message naming the field, which a model can act on; a zod
+// regex here would surface as a protocol error instead. Length limits mirror
+// the Contacts and Interaction forms.
+const dateOnlyDescription = "YYYY-MM-DD (a calendar date, no time or timezone), e.g. '2026-09-20'.";
+
+export const McpFindContactInputShape = {
+  query: z
+    .string()
+    .min(1, "query is required")
+    .describe(
+      "Text to look for in the contact's name, email or title (substring, not case-sensitive for plain letters). A name is enough.",
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(25)
+    .optional()
+    .describe("Maximum contacts to return (default 10, max 25)."),
+};
+
+export const McpFindContactSchema = z.object(McpFindContactInputShape);
+export type McpFindContactInput = z.infer<typeof McpFindContactSchema>;
+
+export const McpAddContactInputShape = {
+  name: z
+    .string()
+    .min(1, "name is required")
+    .max(120, "name must be 120 characters or fewer")
+    .describe("The person's full name, as written in the source."),
+  title: z.string().max(120).optional().describe("Job title, if stated."),
+  email: z.string().optional().describe("Email address, only if stated."),
+  phone: z.string().max(40).optional().describe("Phone number, only if stated."),
+  linkedinUrl: z
+    .string()
+    .optional()
+    .describe("Full LinkedIn profile URL starting with https://, only if stated."),
+  company: z
+    .string()
+    .optional()
+    .describe("Where they work now. Matched to an existing company by name, or created."),
+  location: z
+    .string()
+    .optional()
+    .describe("City or region, if stated. Matched to an existing location by name, or created."),
+  relationship: z
+    .string()
+    .max(120)
+    .optional()
+    .describe("How the user knows them, e.g. 'former manager', 'met at a conference'. Only if stated."),
+  role: z
+    .string()
+    .optional()
+    .describe("What this person is to the user, e.g. 'Recruiter', 'Referrer'. Matched to an existing role by name, or created."),
+  notes: z.string().max(2000).optional().describe("Free-form notes. Only facts present in the source."),
+  lastContactedAt: z
+    .string()
+    .optional()
+    .describe(`Date the user last spoke to them. ${dateOnlyDescription} Not in the future.`),
+  allowDuplicate: z
+    .boolean()
+    .optional()
+    .describe(
+      "Create the contact even though an existing one has the same name, email or LinkedIn URL. Set only after the user has confirmed it is a different person.",
+    ),
+};
+
+export const McpAddContactSchema = z.object(McpAddContactInputShape);
+export type McpAddContactInput = z.infer<typeof McpAddContactSchema>;
+
+export const McpLogInteractionInputShape = {
+  contactId: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("The contact's id, as returned by find_contact or add_contact. Preferred. Provide this or contactName, not both."),
+  contactName: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "The contact's full name, accepted only when it matches exactly one saved contact. Anything ambiguous or partial logs nothing and returns candidates. Provide this or contactId, not both.",
+    ),
+  purpose: z
+    .string()
+    .min(1)
+    .describe(
+      "Why you were in touch, e.g. 'Coffee Chat', 'Advice Call', 'Referral Request', 'Follow-up', 'Thank-you'. Matched to the user's own list of purposes (case-insensitive); created if it isn't there.",
+    ),
+  occurredAt: z
+    .string()
+    .optional()
+    .describe(`Day the interaction happened. ${dateOnlyDescription} Defaults to today. A future date records a planned interaction.`),
+  outcome: z
+    .string()
+    .max(2000)
+    .optional()
+    .describe("What was said or decided. Only facts present in the source; do not embellish."),
+  nextStep: z
+    .string()
+    .max(500)
+    .optional()
+    .describe("A follow-up action the user committed to or was asked to do. Only if stated in the source."),
+  nextStepDate: z
+    .string()
+    .optional()
+    .describe(`When the next step is due. ${dateOnlyDescription} Requires nextStep and cannot be before occurredAt. Only if a date is stated.`),
+  jobId: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("Id of a saved job this interaction relates to, as returned by add_job or find_job."),
+  allowDuplicate: z
+    .boolean()
+    .optional()
+    .describe(
+      "Log another interaction even though one with the same contact, date, purpose and outcome already exists. Leave unset when retrying or re-processing the same source.",
+    ),
+};
+
+export const McpLogInteractionSchema = z.object(McpLogInteractionInputShape);
+export type McpLogInteractionInput = z.infer<typeof McpLogInteractionSchema>;
+
+// No arguments — always the caller's own due follow-ups.
+export const McpListFollowupsInputShape = {};
+
+export const McpListFollowupsSchema = z.object(McpListFollowupsInputShape);
+export type McpListFollowupsInput = z.infer<typeof McpListFollowupsSchema>;

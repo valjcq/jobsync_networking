@@ -21,6 +21,13 @@ import {
   McpAddJobsBatchSchema,
   McpSaveMatchResultsBatchInputShape,
   McpSaveMatchResultsBatchSchema,
+  McpFindContactInputShape,
+  McpFindContactSchema,
+  McpAddContactInputShape,
+  McpAddContactSchema,
+  McpLogInteractionInputShape,
+  McpLogInteractionSchema,
+  McpListFollowupsInputShape,
 } from "@/models/mcp.schema";
 import { handleAddJob } from "@/lib/mcp/tools/addJob";
 import { handleAddQuestion } from "@/lib/mcp/tools/addQuestion";
@@ -31,6 +38,10 @@ import { handleFindJob } from "@/lib/mcp/tools/findJob";
 import { handleUpdateJob } from "@/lib/mcp/tools/updateJob";
 import { handleAddJobsBatch } from "@/lib/mcp/tools/addJobsBatch";
 import { handleSaveMatchResultsBatch } from "@/lib/mcp/tools/saveMatchResultsBatch";
+import { handleFindContact } from "@/lib/mcp/tools/findContact";
+import { handleAddContact } from "@/lib/mcp/tools/addContact";
+import { handleLogInteraction } from "@/lib/mcp/tools/logInteraction";
+import { handleListFollowups } from "@/lib/mcp/tools/listFollowups";
 
 function isMcpEnabled(): boolean {
   const env = process.env.MCP_ENABLED;
@@ -230,6 +241,95 @@ async function handler(req: Request): Promise<Response> {
         };
       }
       return handleSaveMatchResultsBatch(parsed.data, userId, tokenName);
+    },
+  );
+
+  // Networking tools. All four (reads included) require networking:write, like
+  // find_job requires jobs:write. Tokens created before this scope existed
+  // don't have it; they keep working for everything above and get a clear
+  // "Insufficient scope" here until a new token is created.
+  server.tool(
+    "find_contact",
+    MCP_TOOL_DESCRIPTIONS.find_contact,
+    McpFindContactInputShape,
+    async (rawInput) => {
+      if (!auth.scopes.includes("networking:write")) {
+        return {
+          content: [
+            { type: "text" as const, text: "Insufficient scope. Required: networking:write" },
+          ],
+        };
+      }
+      const parsed = McpFindContactSchema.safeParse(rawInput);
+      if (!parsed.success) {
+        const issues = parsed.error.issues.map((i) => i.message).join("; ");
+        return {
+          content: [{ type: "text" as const, text: `Validation error: ${issues}` }],
+        };
+      }
+      return handleFindContact(parsed.data, userId);
+    },
+  );
+
+  server.tool(
+    "add_contact",
+    MCP_TOOL_DESCRIPTIONS.add_contact,
+    McpAddContactInputShape,
+    async (rawInput) => {
+      if (!auth.scopes.includes("networking:write")) {
+        return {
+          content: [
+            { type: "text" as const, text: "Insufficient scope. Required: networking:write" },
+          ],
+        };
+      }
+      const parsed = McpAddContactSchema.safeParse(rawInput);
+      if (!parsed.success) {
+        const issues = parsed.error.issues.map((i) => i.message).join("; ");
+        return {
+          content: [{ type: "text" as const, text: `Validation error: ${issues}` }],
+        };
+      }
+      return handleAddContact(parsed.data, userId);
+    },
+  );
+
+  server.tool(
+    "log_interaction",
+    MCP_TOOL_DESCRIPTIONS.log_interaction,
+    McpLogInteractionInputShape,
+    async (rawInput) => {
+      if (!auth.scopes.includes("networking:write")) {
+        return {
+          content: [
+            { type: "text" as const, text: "Insufficient scope. Required: networking:write" },
+          ],
+        };
+      }
+      const parsed = McpLogInteractionSchema.safeParse(rawInput);
+      if (!parsed.success) {
+        const issues = parsed.error.issues.map((i) => i.message).join("; ");
+        return {
+          content: [{ type: "text" as const, text: `Validation error: ${issues}` }],
+        };
+      }
+      return handleLogInteraction(parsed.data, userId);
+    },
+  );
+
+  server.tool(
+    "list_followups",
+    MCP_TOOL_DESCRIPTIONS.list_followups,
+    McpListFollowupsInputShape,
+    async () => {
+      if (!auth.scopes.includes("networking:write")) {
+        return {
+          content: [
+            { type: "text" as const, text: "Insufficient scope. Required: networking:write" },
+          ],
+        };
+      }
+      return handleListFollowups(userId);
     },
   );
 
