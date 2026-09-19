@@ -4,6 +4,7 @@ import { handleError } from "@/lib/utils";
 import { requireUser } from "../shared";
 import { APP_CONSTANTS } from "@/lib/constants";
 import { CONTACT_LIST_INCLUDE } from "./shared";
+import { contactSearchFilter } from "@/lib/networking/contacts";
 
 // Contacts get their own query rather than getReferenceEntityList: that helper
 // counts jobs grouped by an FK on Job, and a contact reaches Job only through
@@ -19,11 +20,7 @@ export const getContactList = async (
 
     const where: any = { createdBy: user.id };
     if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { email: { contains: search } },
-        { title: { contains: search } },
-      ];
+      where.OR = contactSearchFilter(search);
     }
     // Either the standing role on the person or a role they hold on some job,
     // so a reference never linked to a job still answers the filter. Nested in
