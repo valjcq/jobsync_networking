@@ -2,6 +2,7 @@ export {
   getInteractionList,
   getFollowUps,
   getNetworkingContacts,
+  getJobRefs,
 } from "./interaction/queries";
 
 export {

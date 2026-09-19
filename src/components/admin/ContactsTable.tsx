@@ -35,17 +35,27 @@ function ContactsTable({
 
   // A link is meaningless without the person and JobContact cascades from
   // contactId, so the dialog warns about the links rather than blocking.
+  // Logged interactions cascade the same way.
   const onDeleteContact = (contact: Contact) => {
     const jobs = contact._count?.jobLinks ?? 0;
+    const interactions = contact._count?.interactions ?? 0;
+    const warn = jobs > 0 || interactions > 0;
     setAlert({
       openState: true,
       deleteAction: true,
       itemId: contact.id,
-      title: jobs > 0 ? "Delete this contact?" : undefined,
-      description:
-        jobs > 0
-          ? `${contact.name} is linked to ${jobs} job${jobs === 1 ? "" : "s"}. Deleting the contact removes those links. This cannot be undone.`
-          : undefined,
+      title: warn ? "Delete this contact?" : undefined,
+      description: warn
+        ? [
+            jobs > 0 &&
+              `${contact.name} is linked to ${jobs} job${jobs === 1 ? "" : "s"}. Deleting the contact removes those links.`,
+            interactions > 0 &&
+              `${interactions} logged interaction${interactions === 1 ? "" : "s"} will be deleted too.`,
+            "This cannot be undone.",
+          ]
+            .filter(Boolean)
+            .join(" ")
+        : undefined,
     });
   };
 

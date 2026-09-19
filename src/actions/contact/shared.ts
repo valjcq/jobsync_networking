@@ -18,5 +18,5 @@ export const CONTACT_LIST_INCLUDE = {
     },
     orderBy: { createdAt: "asc" as const },
   },
-  _count: { select: { jobLinks: true } },
+  _count: { select: { jobLinks: true, interactions: true } },
 };

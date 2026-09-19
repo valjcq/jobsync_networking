@@ -65,7 +65,7 @@ export interface Contact {
   updatedAt: Date;
   createdBy: string;
   jobLinks?: JobContactLink[];
-  _count?: { jobLinks: number };
+  _count?: { jobLinks: number; interactions?: number };
 }
 
 // What the job-tab ComboBox consumes: id/label/value, like every other picker.

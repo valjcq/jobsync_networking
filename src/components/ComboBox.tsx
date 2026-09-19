@@ -29,6 +29,7 @@ import { toastError } from "@/lib/toast";
 import { createActivityType } from "@/actions/activity.actions";
 import { createJobSource } from "@/actions/job.actions";
 import { createContactRole } from "@/actions/contactRole.actions";
+import { createInteractionPurpose } from "@/actions/interactionPurpose.actions";
 
 interface ComboboxProps {
   options: any[];
@@ -121,6 +122,14 @@ export function Combobox({
             return;
           }
           response = roleRes.data;
+          break;
+        case "interactionPurpose":
+          const purposeRes = await createInteractionPurpose(label);
+          if (!purposeRes.success) {
+            toastError(purposeRes.message);
+            return;
+          }
+          response = purposeRes.data;
           break;
         case "activityType":
           response = await createActivityType(label);

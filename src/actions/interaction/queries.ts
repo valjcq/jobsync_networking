@@ -90,3 +90,26 @@ export const getNetworkingContacts = async (): Promise<any | undefined> => {
     return handleError(error, "Failed to fetch contacts. ");
   }
 };
+
+// What the form's job picker consumes: id/label/value, like every other
+// picker, with the value carrying what is worth searching on.
+export const getJobRefs = async (): Promise<any | undefined> => {
+  try {
+    const user = await requireUser();
+    const rows = await prisma.job.findMany({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        JobTitle: { select: { label: true } },
+        Company: { select: { label: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return rows.map((row) => {
+      const label = `${row.JobTitle.label} @ ${row.Company.label}`;
+      return { id: row.id, label, value: label.toLowerCase() };
+    });
+  } catch (error) {
+    return handleError(error, "Failed to fetch jobs. ");
+  }
+};
