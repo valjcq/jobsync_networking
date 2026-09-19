@@ -8,6 +8,7 @@ import {
   Wrench,
   Zap,
   BookOpen,
+  Handshake,
 } from "lucide-react";
 
 export const APP_CONSTANTS = {
@@ -290,6 +291,18 @@ export const CONTACT_ROLES = [
   { label: "Reference", value: "reference" },
 ] as const;
 
+// value must equal canonicalizeEntityValue(label) or the creatable purpose
+// picker will mint a duplicate instead of matching the seeded row.
+export const INTERACTION_PURPOSES = [
+  { label: "Cold Application", value: "cold application" },
+  { label: "Advice Call", value: "advice call" },
+  { label: "Referral Request", value: "referral request" },
+  { label: "Follow-up", value: "follow-up" },
+  { label: "Thank-you", value: "thank-you" },
+  { label: "Coffee Chat", value: "coffee chat" },
+  { label: "Intro Request", value: "intro request" },
+] as const;
+
 export const JOB_STATUSES = [
   { label: "New", value: "new" },
   { label: "Draft", value: "draft" },
@@ -345,6 +358,11 @@ export const SIDEBAR_LINKS = [
     icon: BookOpen,
     route: "/dashboard/questions",
     label: "Questions",
+  },
+  {
+    icon: Handshake,
+    route: "/dashboard/networking",
+    label: "Networking",
   },
   {
     icon: UserRound,

@@ -55,6 +55,19 @@ describe("backup ordering", () => {
     expect(at("Location")).toBeLessThan(at("Contact"));
   });
 
+  it("inserts Interaction after the contact, job and purpose it points at", () => {
+    const at = (m: BackupModel) => INSERT_ORDER.indexOf(m);
+    expect(at("InteractionPurpose")).toBeLessThan(at("Interaction"));
+    expect(at("Contact")).toBeLessThan(at("Interaction"));
+    expect(at("Job")).toBeLessThan(at("Interaction"));
+    expect(MODEL_SPECS.Interaction.fks).toEqual({
+      contactId: "Contact",
+      purposeId: "InteractionPurpose",
+      jobId: "Job",
+    });
+    expect(MODEL_SPECS.Interaction.scope("u1")).toEqual({ createdBy: "u1" });
+  });
+
   it("scopes JobContact through the job, which is the only chain it has", () => {
     expect(MODEL_SPECS.JobContact.scope("u1")).toEqual({ Job: { userId: "u1" } });
     expect(MODEL_SPECS.JobContact.fks).toEqual({
@@ -74,11 +87,12 @@ describe("backup ordering", () => {
     });
   });
 
-  it("marks exactly the seven lookup models, all owned by createdBy", () => {
+  it("marks exactly the eight lookup models, all owned by createdBy", () => {
     expect([...LOOKUP_MODELS].sort()).toEqual([
       "ActivityType",
       "Company",
       "ContactRole",
+      "InteractionPurpose",
       "JobSource",
       "JobTitle",
       "Location",

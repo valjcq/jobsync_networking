@@ -25,6 +25,8 @@ model User {
   JobSource      JobSource[]
   Contact        Contact[]
   ContactRole    ContactRole[]
+  Interaction        Interaction[]
+  InteractionPurpose InteractionPurpose[]
   Profile        Profile[]
   Activity       Activity[]
   ActivityType   ActivityType[]
@@ -245,6 +247,7 @@ model Contact {
   interviewId       String?
 
   jobLinks          JobContact[]
+  interactions      Interaction[]
 
   @@index([createdBy])
   @@index([companyId])
@@ -395,6 +398,7 @@ model Job {
   Notes         Note[]
   tags        Tag[]
   contactLinks  JobContact[]
+  interactions  Interaction[]
 
   // Automation discovery fields
   automationId    String?
@@ -619,4 +623,40 @@ model ChatConversation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model InteractionPurpose {
+  id           String        @id @default(uuid())
+  label        String
+  value        String
+  createdBy    String
+  user         User          @relation(fields: [createdBy], references: [id])
+  interactions Interaction[]
+
+  @@unique([value, createdBy])
+}
+
+model Interaction {
+  id           String             @id @default(uuid())
+  contactId    String
+  Contact      Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  purposeId    String
+  Purpose      InteractionPurpose @relation(fields: [purposeId], references: [id])
+  // Date-only values, like Contact.lastContactedAt: local midnight of the picked day
+  occurredAt   DateTime
+  outcome      String?
+  nextStep     String?
+  nextStepDate DateTime?
+  // A real instant, set when the step is marked done
+  nextStepDoneAt DateTime?
+  jobId        String?
+  Job          Job?               @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  createdBy    String
+  user         User               @relation(fields: [createdBy], references: [id])
+
+  @@index([createdBy])
+  @@index([contactId, occurredAt])
+  @@index([nextStepDate])
 }

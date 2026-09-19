@@ -28,6 +28,8 @@ export type BackupModel =
   | "Contact"
   | "ContactRole"
   | "JobContact"
+  | "InteractionPurpose"
+  | "Interaction"
   | "Task"
   | "Activity"
   | "Question"
@@ -166,6 +168,21 @@ export const MODEL_SPECS: Record<BackupModel, ModelSpec> = {
     fks: { jobId: "Job", contactId: "Contact", roleId: "ContactRole" },
     scope: (userId) => ({ Job: { userId } }),
   },
+  // A lookup so a restore into an account that already has purposes does not
+  // double them; an old backup carries none and they are re-seeded on demand.
+  InteractionPurpose: {
+    delegate: "interactionPurpose",
+    owner: "createdBy",
+    lookup: true,
+    fks: {},
+    scope: byCreatedBy,
+  },
+  Interaction: {
+    delegate: "interaction",
+    owner: "createdBy",
+    fks: { contactId: "Contact", purposeId: "InteractionPurpose", jobId: "Job" },
+    scope: byCreatedBy,
+  },
   Task: {
     delegate: "task",
     owner: "userId",
@@ -195,6 +212,7 @@ export const INSERT_ORDER: BackupModel[] = [
   "Tag",
   "ActivityType",
   "ContactRole",
+  "InteractionPurpose",
   "Profile",
   "File",
   "Resume",
@@ -213,6 +231,7 @@ export const INSERT_ORDER: BackupModel[] = [
   "Interview",
   "Contact",
   "JobContact",
+  "Interaction",
   "Task",
   "Activity",
   "Question",

@@ -259,6 +259,22 @@ const JobContact = z.object({
   createdAt: dt,
 });
 
+const InteractionPurpose = z.object({ id, label: str, value: str });
+
+const Interaction = z.object({
+  id,
+  contactId: id,
+  purposeId: id,
+  occurredAt: dt,
+  outcome: optStr,
+  nextStep: optStr,
+  nextStepDate: optDt,
+  nextStepDoneAt: optDt,
+  jobId: optId,
+  createdAt: dt,
+  updatedAt: dt,
+});
+
 const Task = z.object({
   id,
   title: str,
@@ -331,6 +347,7 @@ export const BackupDataSchema = z.object({
   Tag: group(Tag),
   ActivityType: group(ActivityType),
   ContactRole: group(ContactRole),
+  InteractionPurpose: group(InteractionPurpose),
   Profile: group(Profile),
   File: group(File),
   Resume: group(Resume),
@@ -349,6 +366,7 @@ export const BackupDataSchema = z.object({
   Interview: group(Interview),
   Contact: group(Contact),
   JobContact: group(JobContact),
+  Interaction: group(Interaction),
   Task: group(Task),
   Activity: group(Activity),
   Question: group(Question),
