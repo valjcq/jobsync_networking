@@ -146,6 +146,34 @@ async function seedFullAccount() {
     data: { jobId: job.id, contactId: contact.id, roleId: recruiter.id },
   });
 
+  const advice = await prisma.interactionPurpose.create({
+    data: { label: "Advice Call", value: "advice call", createdBy: userId },
+  });
+  const referral = await prisma.interactionPurpose.create({
+    data: { label: "Referral Request", value: "referral request", createdBy: userId },
+  });
+  await prisma.interaction.create({
+    data: {
+      contactId: contact.id,
+      purposeId: advice.id,
+      occurredAt: new Date("2026-09-10T00:00:00.000Z"),
+      outcome: "Went well",
+      createdBy: userId,
+    },
+  });
+  await prisma.interaction.create({
+    data: {
+      contactId: contact.id,
+      purposeId: referral.id,
+      jobId: job.id,
+      occurredAt: new Date("2026-09-12T00:00:00.000Z"),
+      nextStep: "Send CV",
+      nextStepDate: new Date("2026-09-15T00:00:00.000Z"),
+      nextStepDoneAt: new Date("2026-09-14T09:30:00.000Z"),
+      createdBy: userId,
+    },
+  });
+
   const question = await prisma.question.create({
     data: { question: "Why us?", createdBy: userId, tags: { connect: { id: tag.id } } },
   });
@@ -338,6 +366,124 @@ describe("backup round trip", () => {
     // The roles came back once, not doubled on top of anything.
     expect(await prisma.contactRole.count({ where: { createdBy: userId } })).toBe(5);
   });
+
+  // What identifies an interaction without its ids, which are minted anew on
+  // import: who, why, when, and which job.
+  const describeInteractions = async (owner: string) =>
+    (
+      await prisma.interaction.findMany({
+        where: { createdBy: owner },
+        include: { Contact: true, Purpose: true, Job: true },
+      })
+    )
+      .map((i) => ({
+        contact: i.Contact.name,
+        contactOwner: i.Contact.createdBy === owner,
+        purpose: i.Purpose.value,
+        purposeOwner: i.Purpose.createdBy === owner,
+        job: i.Job ? i.Job.userId === owner : null,
+        occurredAt: i.occurredAt.toISOString(),
+        outcome: i.outcome,
+        nextStep: i.nextStep,
+        nextStepDate: i.nextStepDate?.toISOString() ?? null,
+        nextStepDoneAt: i.nextStepDoneAt?.toISOString() ?? null,
+      }))
+      .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt));
+
+  it("restores interactions with contact, purpose and job remapped", async () => {
+    const restored = await describeInteractions(userId);
+
+    expect(restored).toEqual([
+      {
+        contact: "Pat Lee",
+        contactOwner: true,
+        purpose: "advice call",
+        purposeOwner: true,
+        job: null,
+        occurredAt: "2026-09-10T00:00:00.000Z",
+        outcome: "Went well",
+        nextStep: null,
+        nextStepDate: null,
+        nextStepDoneAt: null,
+      },
+      {
+        contact: "Pat Lee",
+        contactOwner: true,
+        purpose: "referral request",
+        purposeOwner: true,
+        job: true,
+        occurredAt: "2026-09-12T00:00:00.000Z",
+        outcome: null,
+        nextStep: "Send CV",
+        nextStepDate: "2026-09-15T00:00:00.000Z",
+        nextStepDoneAt: "2026-09-14T09:30:00.000Z",
+      },
+    ]);
+    // Purposes came back once each, not doubled
+    expect(
+      await prisma.interactionPurpose.count({ where: { createdBy: userId } }),
+    ).toBe(2);
+  }, 120_000);
+
+  it("exports, imports into a clean account, and compares equal", async () => {
+    const { buffer } = await buildBackupZip(userId, "owner@example.com");
+    const cleanId = await seedAccount(prisma, "clean@example.com");
+    expect(await prisma.interaction.count({ where: { createdBy: cleanId } })).toBe(0);
+
+    const result = await importBackup(buffer, cleanId, "clean@example.com", false);
+    expect(result.counts.Interaction).toBe(2);
+    expect(
+      await prisma.interactionPurpose.count({ where: { createdBy: cleanId } }),
+    ).toBe(2);
+
+    // Same content under a different owner: nothing is shared with the source
+    const source = await describeInteractions(userId);
+    const copy = await describeInteractions(cleanId);
+    expect(copy).toEqual(source);
+
+    const sourceIds = (
+      await prisma.interaction.findMany({ where: { createdBy: userId } })
+    ).map((i) => i.id);
+    const copyIds = (
+      await prisma.interaction.findMany({ where: { createdBy: cleanId } })
+    ).map((i) => i.id);
+    expect(copyIds.some((id) => sourceIds.includes(id))).toBe(false);
+
+    // Exporting the copy yields the same interaction data again
+    const again = await buildBackupZip(cleanId, "clean@example.com");
+    const JSZip = (await import("jszip")).default;
+    const zip = await JSZip.loadAsync(again.buffer);
+    const data = JSON.parse(await zip.file("data.json")!.async("string"));
+    expect(data.Interaction).toHaveLength(2);
+    expect(data.InteractionPurpose).toHaveLength(2);
+  }, 120_000);
+
+  it("imports a backup that predates interactions", async () => {
+    const { buffer } = await buildBackupZip(userId, "owner@example.com");
+
+    // Reshape into what v1.1.20 wrote: no interaction groups, no counts.
+    const JSZip = (await import("jszip")).default;
+    const zip = await JSZip.loadAsync(buffer);
+    const data = JSON.parse(await zip.file("data.json")!.async("string"));
+    const manifest = JSON.parse(await zip.file("manifest.json")!.async("string"));
+    for (const group of ["Interaction", "InteractionPurpose"]) {
+      delete data[group];
+      delete manifest.counts[group];
+    }
+    zip.file("data.json", JSON.stringify(data));
+    zip.file("manifest.json", JSON.stringify(manifest));
+    const legacy = await zip.generateAsync({ type: "nodebuffer" });
+
+    await importBackup(legacy, userId, "owner@example.com", true);
+
+    // Contacts survive; there is simply nothing to restore for interactions,
+    // and purposes are re-created on demand rather than by the import.
+    expect(await prisma.contact.count({ where: { createdBy: userId } })).toBe(1);
+    expect(await prisma.interaction.count({ where: { createdBy: userId } })).toBe(0);
+    expect(
+      await prisma.interactionPurpose.count({ where: { createdBy: userId } }),
+    ).toBe(0);
+  }, 120_000);
 
   it("reseeds the default contact roles when restoring a pre-contacts backup", async () => {
     const { buffer } = await buildBackupZip(userId, "owner@example.com");
