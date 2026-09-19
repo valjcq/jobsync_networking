@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
     automations = [],
     contacts = [],
     contactRoles = [],
+    interactionPurposes = [],
   }: {
     jobIds?: string[];
     resumes?: string[];
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
     automations?: string[];
     contacts?: string[];
     contactRoles?: string[];
+    interactionPurposes?: string[];
   } = await req.json();
 
   // Delete automations before resumes: Automation.resumeId is a required FK, so
@@ -107,7 +109,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Delete contacts before the Library teardown: they reference companies,
-  // locations and roles. Their job links cascade with them.
+  // locations and roles. Their job links and logged interactions cascade with
+  // them, which is also what frees the interaction purposes below.
   if (contacts.length > 0) {
     await prisma.contact.deleteMany({
       where: { name: { in: contacts }, createdBy: userId },
@@ -121,6 +124,7 @@ export async function POST(req: NextRequest) {
   await deleteLibraryByName("location", locations, userId);
   await deleteLibraryByName("activityType", activityTypes, userId);
   await deleteLibraryByName("contactRole", contactRoles, userId);
+  await deleteLibraryByName("interactionPurpose", interactionPurposes, userId);
   await deleteTagsByName(tags, userId);
   if (mcpTokens.length > 0) {
     await prisma.mcpAccessToken.deleteMany({
@@ -156,7 +160,8 @@ type RefModel =
   | "company"
   | "location"
   | "activityType"
-  | "contactRole";
+  | "contactRole"
+  | "interactionPurpose";
 
 // Count every place a Library row can still be referenced from, so we never
 // delete one that another job or resume section still uses.
@@ -190,6 +195,9 @@ async function referenceCount(
       (await prisma.jobContact.count({ where: { roleId: refId } })) +
       (await prisma.contact.count({ where: { roleId: refId } }))
     );
+  }
+  if (model === "interactionPurpose") {
+    return prisma.interaction.count({ where: { purposeId: refId } });
   }
   return (
     (await prisma.job.count({ where: { locationId: refId } })) +
