@@ -129,7 +129,10 @@ describe("NetworkingPageClient", () => {
     await screen.findByText("Went well");
     expect(getInteractionList).toHaveBeenLastCalledWith(1, 25, undefined, undefined);
 
-    await user.click(screen.getByRole("button", { name: /pat lee/i }));
+    // Anchored to the start: the row's own accessible name begins with the
+    // contact's name, while the row's "Edit" button's name (e.g. "Edit Pat
+    // Lee") would otherwise also match a loose /pat lee/i search.
+    await user.click(screen.getByRole("button", { name: /^pat lee/i }));
 
     await waitFor(() =>
       expect(getInteractionList).toHaveBeenLastCalledWith(1, 25, "c1", undefined),

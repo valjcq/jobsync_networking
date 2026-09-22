@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useRef, useState } from "react";
 import { format } from "date-fns";
+import { Pencil } from "lucide-react";
 import { Card, CardContent, CardTitle } from "../ui/card";
 import { ResponsiveCardHeader } from "../ResponsiveCardHeader";
 import { Badge } from "../ui/badge";
@@ -10,8 +11,9 @@ import AddContact from "../AddContact";
 import { cn } from "@/lib/utils";
 import { getAllCompanies } from "@/actions/company.actions";
 import { getAllJobLocations } from "@/actions/jobLocation.actions";
+import { getContactById } from "@/actions/contact.actions";
 import type { NetworkingContact } from "@/models/interaction.model";
-import type { ContactRole } from "@/models/contact.model";
+import type { Contact, ContactRole } from "@/models/contact.model";
 import type { Company, JobLocation } from "@/models/job.model";
 
 type ContactsPanelProps = {
@@ -31,6 +33,7 @@ function ContactsPanel({
 }: ContactsPanelProps) {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editContact, setEditContact] = useState<Contact | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [locations, setLocations] = useState<JobLocation[]>([]);
   const [pickersLoading, setPickersLoading] = useState(false);
@@ -50,6 +53,13 @@ function ContactsPanel({
       })
       .finally(() => setPickersLoading(false));
   }, []);
+
+  const onEditContact = async (contactId: string) => {
+    const contact = await getContactById(contactId);
+    if (!contact || contact.success === false) return;
+    setEditContact(contact);
+    openDialog(true);
+  };
 
   const term = search.trim().toLowerCase();
   const shown = term
@@ -74,7 +84,8 @@ function ContactsPanel({
           />
           <AddContact
             reloadContacts={onChanged}
-            resetEditContact={() => {}}
+            editContact={editContact}
+            resetEditContact={() => setEditContact(null)}
             dialogOpen={dialogOpen}
             setDialogOpen={openDialog}
             pickersLoading={pickersLoading}
@@ -94,34 +105,51 @@ function ContactsPanel({
           Everyone
         </Button>
         {shown.map((contact) => (
-          <button
+          <div
             key={contact.id}
-            type="button"
-            onClick={() => onSelect(contact.id)}
-            aria-pressed={contact.id === selectedId}
             className={cn(
-              "flex flex-col items-start gap-0.5 rounded-md px-3 py-2 text-left text-sm hover:bg-muted",
+              "flex items-center gap-1 rounded-md hover:bg-muted",
               contact.id === selectedId && "bg-muted",
             )}
           >
-            <span className="flex w-full items-center justify-between gap-2">
-              <span className="truncate font-medium">{contact.name}</span>
-              {contact.openSteps > 0 && (
-                <Badge variant="secondary">{contact.openSteps} open</Badge>
-              )}
-            </span>
-            <span className="truncate text-xs text-muted-foreground">
-              {[contact.title, contact.Company?.label]
-                .filter(Boolean)
-                .join(" · ") || "No organization"}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              Last contacted{" "}
-              {contact.lastContactedAt
-                ? format(contact.lastContactedAt, "PP")
-                : "never"}
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={() => onSelect(contact.id)}
+              aria-pressed={contact.id === selectedId}
+              className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-3 py-2 text-left text-sm"
+            >
+              <span className="flex w-full items-center justify-between gap-2">
+                <span className="truncate font-medium">{contact.name}</span>
+                {contact.openSteps > 0 && (
+                  <Badge variant="secondary">{contact.openSteps} open</Badge>
+                )}
+              </span>
+              <span className="truncate text-xs text-muted-foreground">
+                {[contact.title, contact.Company?.label]
+                  .filter(Boolean)
+                  .join(" · ") || "No organization"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Last contacted{" "}
+                {contact.lastContactedAt
+                  ? format(contact.lastContactedAt, "PP")
+                  : "never"}
+              </span>
+            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 mr-1 cursor-pointer"
+              title="Edit contact"
+              aria-label={`Edit ${contact.name}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditContact(contact.id);
+              }}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         ))}
         {shown.length === 0 && (
           <p className="p-2 text-sm text-muted-foreground">
