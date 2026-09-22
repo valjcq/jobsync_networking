@@ -36,9 +36,9 @@ function getTasksOrderBy(groupBy?: TaskGroupBy) {
       ];
     default:
       return [
+        { dueDate: "asc" as const },
         { priority: "desc" as const },
         { createdAt: "desc" as const },
-        { updatedAt: "desc" as const },
       ];
   }
 }

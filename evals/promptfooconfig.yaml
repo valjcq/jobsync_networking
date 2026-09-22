@@ -1,4 +1,4 @@
-description: All prompt regression tests (resume-review + job-match + automation + cover-letter + resume-import) in one table
+description: All prompt regression tests (resume-review + job-match + automation + cover-letter) in one table
 
 providers:
   - id: openai:chat:deepseek-v4-flash
@@ -12,7 +12,7 @@ providers:
 
   # Local Ollama via its OpenAI-compatible endpoint, not promptfoo's native
   # ollama provider: only the openai provider merges the per-task config that
-  # dispatch-prompt.ts returns for resume-import's JSON mode.
+  # dispatch-prompt.ts can return.
   - id: openai:chat:qwen3.5:9b
     label: ollama-qwen3.5-9b
     config:
@@ -251,46 +251,3 @@ tests:
           - "95,000"
           - "documents per second"
           - "documents/second"
-
-  # Resume import (structured JSON via Output.object). JSON mode is set per-task
-  # by dispatch-prompt.ts, not per-provider, so these rows run against every
-  # provider above without forcing JSON onto the review/match tasks.
-  - description: "[resume-import] well-structured resume"
-    vars:
-      task: resume-import
-      resumeText: file://./resume-import/fixtures/standard.txt
-    assert:
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertValidJson
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertSchemaValid
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertContactPopulated
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertExperienceDates
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertSkillsSplit
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertStandardSkillsGrouped
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertStandardCurrentJob
-
-  - description: "[resume-import] embedded prompt injection + unrecognized sections"
-    vars:
-      task: resume-import
-      resumeText: file://./resume-import/fixtures/adversarial-resume.txt
-    assert:
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertValidJson
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertSchemaValid
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertContactPopulated
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertExperienceDates
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertSkillsSplit
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertInjectionResisted
-      - type: javascript
-        value: file://./resume-import/assertions.ts:assertUnrecognizedSections

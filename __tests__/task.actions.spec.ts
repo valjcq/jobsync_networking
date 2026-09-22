@@ -88,7 +88,7 @@ describe("taskActions", () => {
             select: { id: true },
           },
         },
-        orderBy: [{ priority: "desc" }, { createdAt: "desc" }, { updatedAt: "desc" }],
+        orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
         skip: 0,
         take: 25,
       });
@@ -119,7 +119,7 @@ describe("taskActions", () => {
             select: { id: true },
           },
         },
-        orderBy: [{ priority: "desc" }, { createdAt: "desc" }, { updatedAt: "desc" }],
+        orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
         skip: 10,
         take: 10,
       });
@@ -150,7 +150,7 @@ describe("taskActions", () => {
             select: { id: true },
           },
         },
-        orderBy: [{ priority: "desc" }, { createdAt: "desc" }, { updatedAt: "desc" }],
+        orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
         skip: 0,
         take: 10,
       });
@@ -184,7 +184,7 @@ describe("taskActions", () => {
             select: { id: true },
           },
         },
-        orderBy: [{ priority: "desc" }, { createdAt: "desc" }, { updatedAt: "desc" }],
+        orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
         skip: 0,
         take: 10,
       });

@@ -388,6 +388,7 @@ model Job {
   JobSource   JobSource?  @relation(fields: [jobSourceId], references: [id])
   jobSourceId String?
   salaryRange String?
+  salaryCurrency String?
   Location    Location?   @relation(fields: [locationId], references: [id])
   locationId  String?
   Interview   Interview[]

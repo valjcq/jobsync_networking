@@ -150,8 +150,8 @@ describe("AddJob Component", () => {
     await user.click(saveBtn);
     expect(screen.getByText("Job title is required.")).toBeInTheDocument();
     expect(screen.getByText("Company name is required.")).toBeInTheDocument();
-    expect(screen.getByText("Location is required.")).toBeInTheDocument();
-    expect(screen.getByText("Source is required.")).toBeInTheDocument();
+    // Location, due date and source are intentionally optional now, matching
+    // what MCP-created jobs are allowed to leave blank.
   });
   it("should close the dialog when clicked on cancel button", async () => {
     const cancelBtn = screen.getByRole("button", { name: /cancel/i });
@@ -274,6 +274,7 @@ describe("AddJob Component", () => {
         dueDate: expect.any(Date),
         dateApplied: undefined,
         salaryRange: "",
+        salaryCurrency: "USD",
         jobDescription: "<p>New Job Description</p>",
         jobUrl: "",
         applied: false,

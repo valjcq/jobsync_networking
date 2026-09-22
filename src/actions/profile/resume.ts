@@ -11,6 +11,7 @@ export const getResumeList = async (
   page: number = 1,
   limit: number = APP_CONSTANTS.RECORDS_PER_PAGE,
   minSections: number = 0,
+  requireFile: boolean = false,
 ): Promise<any | undefined> => {
   try {
     const user = await requireUser();
@@ -26,10 +27,11 @@ export const getResumeList = async (
     const defaultResumeId = userRow?.defaultResumeId ?? null;
 
     let rawData;
-    if (minSections > 0) {
-      // When filtering by section count, Prisma can't express ">= N
-      // related rows" in `where`, so fetch all of the user's resumes and
-      // filter in JS instead of applying skip/take.
+    if (minSections > 0 || requireFile) {
+      // When filtering by section count or file presence, Prisma can't
+      // express ">= N related rows" in `where` (and keeping requireFile on
+      // the same path avoids a second query shape), so fetch all of the
+      // user's resumes and filter in JS instead of applying skip/take.
       rawData = await prisma.resume.findMany({
         where,
         select: resumeListSelect,
@@ -82,8 +84,12 @@ export const getResumeList = async (
     }
 
     const data =
-      minSections > 0
-        ? rawData.filter((r) => r._count.ResumeSections >= minSections)
+      minSections > 0 || requireFile
+        ? rawData.filter(
+            (r) =>
+              (minSections === 0 || r._count.ResumeSections >= minSections) &&
+              (!requireFile || r.FileId),
+          )
         : rawData;
 
     return { data, total, success: true };

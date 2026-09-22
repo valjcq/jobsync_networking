@@ -40,6 +40,7 @@ import {
   hasMinResumeSections,
   warnInsufficientResumeSections,
 } from "@/utils/resumeSections.utils";
+import { ResumePreviewDialog } from "./ResumePreviewDialog";
 
 type DocumentTableProps = {
   documents: ProfileDocument[];
@@ -65,6 +66,7 @@ function DocumentTable({
   const [setDefaultConfirmOpen, setSetDefaultConfirmOpen] = useState(false);
   const [documentToSetDefault, setDocumentToSetDefault] =
     useState<ProfileDocument>();
+  const [previewDoc, setPreviewDoc] = useState<ProfileDocument>();
   const onDeleteDocument = useMemo(
     () => (doc: ProfileDocument) => {
       if (!doc.id) return;
@@ -165,20 +167,33 @@ function DocumentTable({
               <TableRow key={`${doc.type}-${doc.id}`}>
                 <TableCell className="font-medium">
                   {isResume ? (
-                    <Link
-                      href={`/dashboard/profile/resume/${doc.id}`}
-                      className="flex items-center"
-                    >
-                      {doc.title}
-                      {doc.FileId ? (
+                    doc.FileId ? (
+                      <button
+                        type="button"
+                        className="flex items-center text-left hover:underline"
+                        onClick={() => setPreviewDoc(doc)}
+                      >
+                        {doc.title}
                         <Paperclip className="h-3.5 w-3.5 ml-1" />
-                      ) : null}
-                      {doc.isDefault ? (
-                        <Badge className="ml-2 border-transparent bg-green-600 text-white hover:bg-green-600/90">
-                          Default
-                        </Badge>
-                      ) : null}
-                    </Link>
+                        {doc.isDefault ? (
+                          <Badge className="ml-2 border-transparent bg-green-600 text-white hover:bg-green-600/90">
+                            Default
+                          </Badge>
+                        ) : null}
+                      </button>
+                    ) : (
+                      <Link
+                        href={`/dashboard/profile/resume/${doc.id}`}
+                        className="flex items-center"
+                      >
+                        {doc.title}
+                        {doc.isDefault ? (
+                          <Badge className="ml-2 border-transparent bg-green-600 text-white hover:bg-green-600/90">
+                            Default
+                          </Badge>
+                        ) : null}
+                      </Link>
+                    )
                   ) : (
                     <button
                       className="text-left hover:underline"
@@ -310,6 +325,14 @@ function DocumentTable({
         actionLabel="Set as default"
         actionVariant="default"
       />
+      {previewDoc?.id && (
+        <ResumePreviewDialog
+          open={!!previewDoc}
+          onOpenChange={(open) => !open && setPreviewDoc(undefined)}
+          resumeId={previewDoc.id}
+          title={previewDoc.title}
+        />
+      )}
     </>
   );
 }

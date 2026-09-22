@@ -75,36 +75,3 @@ export function ClearChatBeforeReviewDialog({
     </AlertDialog>
   );
 }
-
-export function DiscardImportDialog({
-  open,
-  onOpenChange,
-  onConfirm,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Discard import?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will delete this resume and its attached file. Unsaved
-            suggestions will be lost.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={onConfirm}
-          >
-            Discard import
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}

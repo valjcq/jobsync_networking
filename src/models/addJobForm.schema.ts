@@ -19,21 +19,19 @@ export const AddJobFormSchema = z.object({
       message: "Company name must be at least 2 characters.",
     }),
   location: z
-    .string({
-      error: "Location is required.",
-    })
+    .string()
     .min(2, {
       message: "Location name must be at least 2 characters.",
-    }),
+    })
+    .optional(),
   type: z.string().min(1),
   workplaceType: z.string().optional(),
   source: z
-    .string({
-      error: "Source is required.",
-    })
+    .string()
     .min(2, {
       message: "Source name must be at least 2 characters.",
-    }),
+    })
+    .optional(),
   status: z
     .string({
       error: "Status is required.",
@@ -42,7 +40,7 @@ export const AddJobFormSchema = z.object({
       message: "Status must be at least 2 characters.",
     })
     .default("draft"),
-  dueDate: z.date(),
+  dueDate: z.date().optional(),
   /**
    * Note: Timezone offsets can be allowed by setting the offset option to true.
    * z.string().datetime({ offset: true });
@@ -50,6 +48,7 @@ export const AddJobFormSchema = z.object({
   //
   dateApplied: z.date().optional(),
   salaryRange: z.string().optional(),
+  salaryCurrency: z.string().optional(),
   jobDescription: z
     .string({
       error: "Job description is required.",

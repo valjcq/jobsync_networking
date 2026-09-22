@@ -19,14 +19,10 @@ import { Sparkles } from "lucide-react";
 import { deleteSkillsSection, setDefaultResume } from "@/actions/profile.actions";
 import { DeleteAlertDialog } from "../DeleteAlertDialog";
 import { ResumeHeader } from "./resume-container/ResumeHeader";
-import { ImportReviewBanner } from "./resume-container/ImportReviewBanner";
-import { StructureWithAiCard } from "./resume-container/StructureWithAiCard";
 import {
   AttachPdfDialog,
   ClearChatBeforeReviewDialog,
-  DiscardImportDialog,
 } from "./resume-container/ResumeDialogs";
-import { useResumeImport } from "./resume-container/useResumeImport";
 import { useResumePdfExport } from "./resume-container/useResumePdfExport";
 
 function ResumeContainer({
@@ -57,24 +53,6 @@ function ResumeContainer({
   }, [resume.reviewData]);
   const resumeSectionRef = useRef<AddResumeSectionRef>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [showDiscardImportConfirm, setShowDiscardImportConfirm] =
-    useState(false);
-
-  const {
-    pendingCards,
-    importTruncated,
-    unrecognizedSections,
-    importMode,
-    aiModel,
-    aiReady,
-    ollamaConnected,
-    connectionError,
-    isStructuring,
-    handleAcceptCard,
-    handleDiscardCard,
-    handleDiscardImport,
-    handleStructureWithAI,
-  } = useResumeImport(resume);
 
   const {
     showAttachConfirm,
@@ -168,11 +146,6 @@ function ResumeContainer({
     resumeSectionRef.current?.openCertificationDialog(section);
   };
 
-  const isEmptyResume =
-    !ContactInfo && (!ResumeSections || ResumeSections.length === 0);
-  const showStructureWithAI =
-    isEmptyResume && !!resume.File?.filePath && aiReady && !importMode;
-
   const handleSetDefault = async () => {
     if (!resume?.id) return;
     const { success, message } = await setDefaultResume(resume.id);
@@ -218,30 +191,6 @@ function ResumeContainer({
             <ReviewDetails reviewData={parsedReviewData} />
           </CardHeader>
         </Card>
-      )}
-
-      {/* IMPORT REVIEW BANNER */}
-      {importMode && (pendingCards.length > 0 || isStructuring) && (
-        <ImportReviewBanner
-          pendingCards={pendingCards}
-          isStructuring={isStructuring}
-          importTruncated={importTruncated}
-          unrecognizedSections={unrecognizedSections}
-          onAccept={handleAcceptCard}
-          onDiscard={handleDiscardCard}
-          onDiscardImport={() => setShowDiscardImportConfirm(true)}
-        />
-      )}
-
-      {/* STRUCTURE WITH AI BUTTON (empty imported resume, AI available) */}
-      {showStructureWithAI && (
-        <StructureWithAiCard
-          aiModel={aiModel}
-          ollamaConnected={ollamaConnected}
-          connectionError={connectionError}
-          isStructuring={isStructuring}
-          onStructure={handleStructureWithAI}
-        />
       )}
 
       {/* SAVED SECTIONS */}
@@ -302,12 +251,6 @@ function ResumeContainer({
         open={showClearChatConfirm}
         onOpenChange={setShowClearChatConfirm}
         onConfirm={() => void startReview()}
-      />
-
-      <DiscardImportDialog
-        open={showDiscardImportConfirm}
-        onOpenChange={setShowDiscardImportConfirm}
-        onConfirm={handleDiscardImport}
       />
     </>
   );

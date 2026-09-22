@@ -55,6 +55,19 @@ export function Combobox({
   const displayName = label ?? field.name;
   const [newOption, setNewOption] = useState<string>("");
   const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
+  // Filtered by hand rather than cmdk's `filter` prop: cmdk trims an item's
+  // own value before matching it against the search string, so a typed value
+  // with leading/trailing spaces (which this combobox intentionally allows,
+  // then trims on create) could stop matching its own "Create: …" row.
+  const filteredOptions = newOption
+    ? options.filter((option) =>
+        option.value.toLowerCase().includes(newOption.toLowerCase()),
+      )
+    : options;
+  // Only gates the "Create: …" row: whitespace-only input matches no real
+  // option (so the row above stays reachable) but shouldn't itself be
+  // offered as something to create.
+  const trimmedSearch = newOption.trim();
 
   const [isPending, startTransition] = useTransition();
   const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -180,11 +193,7 @@ export function Combobox({
             : "md:w-[240px] lg:w-[280px]"
         )}
       >
-        <Command
-          filter={(value, search) =>
-            value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
-          }
-        >
+        <Command shouldFilter={false}>
           <CommandInput
             value={newOption}
             onValueChange={(val: string) => {
@@ -195,30 +204,13 @@ export function Combobox({
             onKeyDown={(e) => handleEnterKey(e)}
           />
           <CommandList>
-            <CommandEmpty
-              onClick={() => {
-                onCreateOption(newOption);
-                setNewOption("");
-              }}
-              className={cn(
-                "flex cursor-pointer items-center justify-center gap-1 italic mt-2",
-                !newOption && "text-muted-foreground cursor-default"
-              )}
-            >
-              {creatable ? (
-                <>
-                  <CirclePlus className="h-4 w-4" />
-                  <p>Create: </p>
-                  <p className="block max-w-48 truncate font-semibold text-primary">
-                    {newOption}
-                  </p>
-                </>
-              ) : (
+            {!creatable && filteredOptions.length === 0 && (
+              <CommandEmpty>
                 <p className="font-semibold text-primary">No source found!</p>
-              )}
-            </CommandEmpty>
+              </CommandEmpty>
+            )}
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   value={option.value}
                   key={option.id}
@@ -239,6 +231,28 @@ export function Combobox({
                 </CommandItem>
               ))}
             </CommandGroup>
+            {/* Always reachable, regardless of whether the typed text also
+                matches an existing option — cmdk's CommandEmpty only renders
+                when the filtered list is empty, which used to hide this
+                whenever anything matched. */}
+            {creatable && trimmedSearch && (
+              <CommandGroup>
+                <CommandItem
+                  value={`__create__${newOption}`}
+                  className="flex cursor-pointer items-center gap-1 italic"
+                  onSelect={() => {
+                    onCreateOption(trimmedSearch);
+                    setNewOption("");
+                  }}
+                >
+                  <CirclePlus className="h-4 w-4" />
+                  <p>Create: </p>
+                  <p className="block max-w-48 truncate font-semibold text-primary">
+                    {newOption}
+                  </p>
+                </CommandItem>
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

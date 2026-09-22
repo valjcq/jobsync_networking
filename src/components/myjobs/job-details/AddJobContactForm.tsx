@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,8 +14,12 @@ import {
 import { Combobox } from "@/components/ComboBox";
 import AddContact from "@/components/AddContact";
 import { toastActionResult } from "@/lib/toast";
-import { addJobContact } from "@/actions/contact.actions";
-import type { ContactRef, ContactRole } from "@/models/contact.model";
+import { addJobContact, updateJobContact } from "@/actions/contact.actions";
+import type {
+  ContactRef,
+  ContactRole,
+  JobContactLink,
+} from "@/models/contact.model";
 import type { Company, JobLocation } from "@/models/job.model";
 
 const LinkContactSchema = z.object({
@@ -31,6 +35,9 @@ type AddJobContactFormProps = {
   roles: ContactRole[];
   companies: Company[];
   locations: JobLocation[];
+  // When set, the form edits which contact/role this existing link points
+  // to instead of creating a new link.
+  editingLink?: JobContactLink | null;
   onCancel: () => void;
   onLinked: () => void;
   onContactCreated: (contact: ContactRef) => void;
@@ -42,6 +49,7 @@ export function AddJobContactForm({
   roles,
   companies,
   locations,
+  editingLink,
   onCancel,
   onLinked,
   onContactCreated,
@@ -53,14 +61,30 @@ export function AddJobContactForm({
 
   const form = useForm<LinkContactValues>({
     resolver: zodResolver(LinkContactSchema),
-    defaultValues: { contact: "", contactRole: "" },
+    defaultValues: {
+      contact: editingLink?.contactId ?? "",
+      contactRole: editingLink?.roleId ?? "",
+    },
   });
+
+  useEffect(() => {
+    if (editingLink) {
+      form.reset({
+        contact: editingLink.contactId,
+        contactRole: editingLink.roleId,
+      });
+    }
+  }, [editingLink, form]);
 
   const onSubmit = (values: LinkContactValues) => {
     startTransition(async () => {
-      const res = await addJobContact(jobId, values.contact, values.contactRole);
+      const res = editingLink
+        ? await updateJobContact(editingLink.id, values.contact, values.contactRole)
+        : await addJobContact(jobId, values.contact, values.contactRole);
       toastActionResult(res, {
-        success: "Contact has been linked to this job",
+        success: editingLink
+          ? "Contact link has been updated"
+          : "Contact has been linked to this job",
         onSuccess: () => {
           form.reset();
           onLinked();

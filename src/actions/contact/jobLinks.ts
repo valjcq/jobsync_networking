@@ -68,6 +68,42 @@ export const addJobContact = async (
   }
 };
 
+export const updateJobContact = async (
+  linkId: string,
+  contactId: string,
+  roleId: string,
+): Promise<any | undefined> => {
+  try {
+    const user = await requireUser();
+
+    const [link, contact, role] = await Promise.all([
+      prisma.jobContact.count({
+        where: { id: linkId, Job: { userId: user.id } },
+      }),
+      prisma.contact.count({ where: { id: contactId, createdBy: user.id } }),
+      prisma.contactRole.count({ where: { id: roleId, createdBy: user.id } }),
+    ]);
+    if (link === 0) throw new Error("Link not found");
+    if (contact === 0) throw new Error("Contact not found");
+    if (role === 0) throw new Error("Role not found");
+
+    const data = await prisma.jobContact.update({
+      where: { id: linkId },
+      data: { contactId, roleId },
+      include: JOB_CONTACT_INCLUDE,
+    });
+    return { success: true, data };
+  } catch (error: any) {
+    if (error?.code === "P2002") {
+      return {
+        success: false,
+        message: "That contact already holds this role on this job.",
+      };
+    }
+    return handleError(error, "Failed to update linked contact.");
+  }
+};
+
 export const removeJobContact = async (
   linkId: string,
 ): Promise<any | undefined> => {

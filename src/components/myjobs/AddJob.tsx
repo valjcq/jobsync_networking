@@ -41,6 +41,7 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import SelectFormCtrl from "../Select";
 import { DatePicker } from "../DatePicker";
 import { SALARY_RANGES } from "@/lib/data/salaryRangeData";
+import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/data/currencyData";
 import TiptapEditor from "../TiptapEditor";
 import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";
@@ -121,6 +122,7 @@ export function AddJob({
     dueDate: addDays(new Date(), 3),
     status: jobStatuses[0]?.id,
     salaryRange: "",
+    salaryCurrency: DEFAULT_CURRENCY,
     jobUrl: "",
     jobDescription: "N/A",
     location: locations.find((l) => l.id === lastLocationId)?.id,
@@ -138,10 +140,13 @@ export function AddJob({
 
   const loadResumes = useCallback(async () => {
     try {
+      // A resume is selectable here as soon as it has a file attached — it
+      // doesn't need any parsed sections (unlike the AI-matching pickers).
       const resumes = await getResumeList(
         1,
         APP_CONSTANTS.RECORDS_PER_PAGE,
-        APP_CONSTANTS.MIN_RESUME_SECTIONS_FOR_SELECTION,
+        0,
+        true,
       );
       setResumes(resumes.data);
     } catch (error) {
@@ -170,8 +175,9 @@ export function AddJob({
         workplaceType: editJob.workplaceType ?? undefined,
         source: editJob.JobSource?.id,
         status: editJob.Status.id,
-        dueDate: editJob.dueDate,
+        dueDate: editJob.dueDate ?? undefined,
         salaryRange: editJob.salaryRange ?? "",
+        salaryCurrency: editJob.salaryCurrency ?? DEFAULT_CURRENCY,
         jobDescription: editJob.description,
         applied: editJob.applied,
         jobUrl: editJob.jobUrl ?? "",
@@ -199,9 +205,7 @@ export function AddJob({
   }, [dialogOpen, loadResumes, loadCoverLetters]);
 
   const setNewResumeId = (id: string) => {
-    setTimeout(() => {
-      setValue("resume", id);
-    }, 500);
+    setValue("resume", id);
   };
 
   function onSubmit(data: z.infer<typeof AddJobFormSchema>) {
@@ -539,13 +543,28 @@ export function AddJob({
                   />
                 </div>
 
-                {/* Salary Range */}
-                <div>
+                {/* Salary */}
+                <div className="flex flex-wrap gap-2">
+                  <FormField
+                    control={form.control}
+                    name="salaryCurrency"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Currency</FormLabel>
+                        <SelectFormCtrl
+                          label="Currency"
+                          options={CURRENCIES}
+                          field={field}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="salaryRange"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
+                      <FormItem className="flex flex-1 min-w-[160px] flex-col">
                         <FormLabel>Salary Range</FormLabel>
                         <Combobox
                           options={SALARY_RANGES}
@@ -553,6 +572,7 @@ export function AddJob({
                           creatable
                           freeText
                           label="Salary Range"
+                          fullWidth
                         />
                         <FormMessage />
                       </FormItem>
@@ -561,12 +581,12 @@ export function AddJob({
                 </div>
 
                 {/* Resume */}
-                <div className="flex items-end">
+                <div className="flex flex-wrap items-end gap-2">
                   <FormField
                     control={form.control}
                     name="resume"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
+                      <FormItem className="flex flex-1 min-w-[160px] flex-col">
                         <FormLabel>Resume</FormLabel>
                         <SelectFormCtrl
                           label="Resume"
@@ -589,12 +609,12 @@ export function AddJob({
                 </div>
 
                 {/* Cover Letter */}
-                <div className="flex items-end">
+                <div className="flex flex-wrap items-end gap-2">
                   <FormField
                     control={form.control}
                     name="coverLetter"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
+                      <FormItem className="flex flex-1 min-w-[160px] flex-col">
                         <FormLabel>Cover Letter</FormLabel>
                         <SelectFormCtrl
                           label="Cover Letter"

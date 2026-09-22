@@ -1,17 +1,20 @@
 "use client";
 import { useRef, useState } from "react";
-import { PlusCircle, Trash, Users } from "lucide-react";
+import { PenSquare, PlusCircle, Repeat, Trash, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DeleteAlertDialog } from "@/components/DeleteAlertDialog";
+import AddContact from "@/components/AddContact";
 import { toastActionResult } from "@/lib/toast";
 import {
   getAllContacts,
+  getContactById,
   getJobContacts,
   removeJobContact,
 } from "@/actions/contact.actions";
 import { getAllContactRoles } from "@/actions/contactRole.actions";
 import type {
+  Contact,
   ContactRef,
   ContactRole,
   JobContactLink,
@@ -34,16 +37,20 @@ export function JobContactsTab({
   locations = [],
 }: JobContactsTabProps) {
   const [rows, setRows] = useState<JobContactLink[]>(links);
-  const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [editLinkTarget, setEditLinkTarget] = useState<JobContactLink | null>(
+    null,
+  );
   const [contacts, setContacts] = useState<ContactRef[]>([]);
   const [roles, setRoles] = useState<ContactRole[]>([]);
   const [removeTarget, setRemoveTarget] = useState<JobContactLink | null>(null);
+  const [editContactDialogOpen, setEditContactDialogOpen] = useState(false);
+  const [editContactData, setEditContactData] = useState<Contact | null>(null);
   const loadedRef = useRef(false);
 
   // The job page already runs seven parallel queries and most visits never
-  // leave Description, so the pickers wait for the first open of the form.
-  const openForm = async () => {
-    setShowForm(true);
+  // leave Description, so the pickers wait for the first use of a form.
+  const ensurePickersLoaded = async () => {
     if (loadedRef.current) return;
     loadedRef.current = true;
     const [contactList, roleList] = await Promise.all([
@@ -52,6 +59,27 @@ export function JobContactsTab({
     ]);
     if (Array.isArray(contactList)) setContacts(contactList);
     if (Array.isArray(roleList)) setRoles(roleList);
+  };
+
+  const openForm = async () => {
+    setEditLinkTarget(null);
+    setFormMode("add");
+    await ensurePickersLoaded();
+  };
+
+  const openEditLink = async (row: JobContactLink) => {
+    setEditLinkTarget(row);
+    setFormMode("edit");
+    await ensurePickersLoaded();
+  };
+
+  const openEditContact = async (row: JobContactLink) => {
+    if (!row.Contact) return;
+    await ensurePickersLoaded();
+    const contact = await getContactById(row.contactId);
+    if (!contact || contact.success === false) return;
+    setEditContactData(contact);
+    setEditContactDialogOpen(true);
   };
 
   const reload = async () => {
@@ -71,7 +99,7 @@ export function JobContactsTab({
 
   return (
     <div className="space-y-4">
-      {rows.length > 0 && !showForm && (
+      {rows.length > 0 && !formMode && (
         <div className="flex justify-end">
           <Button
             variant="outline"
@@ -85,23 +113,24 @@ export function JobContactsTab({
         </div>
       )}
 
-      {showForm && (
+      {formMode && (
         <AddJobContactForm
           jobId={jobId}
           contacts={contacts}
           roles={roles}
           companies={companies}
           locations={locations}
-          onCancel={() => setShowForm(false)}
+          editingLink={formMode === "edit" ? editLinkTarget : undefined}
+          onCancel={() => setFormMode(null)}
           onLinked={() => {
-            setShowForm(false);
+            setFormMode(null);
             reload();
           }}
           onContactCreated={(contact) => setContacts([contact, ...contacts])}
         />
       )}
 
-      {rows.length === 0 && !showForm && (
+      {rows.length === 0 && !formMode && (
         <JobTabEmptyState
           icon={Users}
           title="No contacts on this job"
@@ -156,15 +185,37 @@ export function JobContactsTab({
                   LinkedIn
                 </a>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="ml-auto cursor-pointer"
-                aria-label={`Remove ${row.Contact?.name}`}
-                onClick={() => setRemoveTarget(row)}
-              >
-                <Trash className="h-4 w-4 text-red-600" />
-              </Button>
+              <div className="ml-auto flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="cursor-pointer"
+                  title="Edit contact info"
+                  aria-label={`Edit ${row.Contact?.name}`}
+                  onClick={() => openEditContact(row)}
+                >
+                  <PenSquare className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="cursor-pointer"
+                  title="Change contact or role"
+                  aria-label={`Change linked contact for ${row.Contact?.name}`}
+                  onClick={() => openEditLink(row)}
+                >
+                  <Repeat className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="cursor-pointer"
+                  aria-label={`Remove ${row.Contact?.name}`}
+                  onClick={() => setRemoveTarget(row)}
+                >
+                  <Trash className="h-4 w-4 text-red-600" />
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
@@ -176,6 +227,25 @@ export function JobContactsTab({
         onOpenChange={(open) => !open && setRemoveTarget(null)}
         onDelete={onRemove}
         alertDescription="Removing this only unlinks the contact from this job. The contact itself is kept."
+      />
+
+      <AddContact
+        hideTrigger
+        editContact={editContactData}
+        dialogOpen={editContactDialogOpen}
+        setDialogOpen={(open) => {
+          setEditContactDialogOpen(open);
+          if (!open) setEditContactData(null);
+        }}
+        companies={companies}
+        locations={locations}
+        roles={roles}
+        reloadContacts={() => {}}
+        resetEditContact={() => setEditContactData(null)}
+        onSaved={() => {
+          setEditContactDialogOpen(false);
+          reload();
+        }}
       />
     </div>
   );

@@ -25,7 +25,10 @@ function SelectFormCtrl({ label, options, field }: SelectProps) {
         name={field.name}
       >
         <FormControl>
-          <SelectTrigger aria-label={`Select ${label}`} className="w-[200px]">
+          <SelectTrigger
+            aria-label={`Select ${label}`}
+            className="w-full sm:w-[200px]"
+          >
             <SelectValue placeholder={`Select ${label}`} />
           </SelectTrigger>
         </FormControl>

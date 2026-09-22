@@ -13,5 +13,6 @@ export {
 export {
   getJobContacts,
   addJobContact,
+  updateJobContact,
   removeJobContact,
 } from "./contact/jobLinks";

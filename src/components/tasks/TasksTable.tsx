@@ -269,6 +269,20 @@ function TasksTable({
           )}
         </span>
       </TableCell>
+      <TableCell
+        className={cn(
+          "hidden sm:table-cell py-1 px-2 whitespace-nowrap",
+          task.status !== "complete" &&
+            getDateGroup(task.dueDate) === "Overdue" &&
+            "text-red-600 font-medium",
+        )}
+      >
+        {task.dueDate
+          ? isToday(new Date(task.dueDate))
+            ? "Today"
+            : format(new Date(task.dueDate), "MMM d, yyyy")
+          : "—"}
+      </TableCell>
       <TableCell className="py-1 px-2">
         {task.activityType?.label || "—"}
       </TableCell>
@@ -391,6 +405,9 @@ function TasksTable({
           <span className="sr-only">Complete</span>
         </TableHead>
         <TableHead className="h-9 px-2">Title</TableHead>
+        <TableHead className="hidden sm:table-cell h-9 px-2">
+          Due Date
+        </TableHead>
         <TableHead className="h-9 px-2">Activity Type</TableHead>
         <TableHead className="hidden md:table-cell h-9 px-2">Status</TableHead>
         <TableHead className="hidden md:table-cell h-9 px-2 text-center">
