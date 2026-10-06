@@ -93,7 +93,7 @@ describe("Default Resume Actions", () => {
       expect(result).toEqual({ success: true });
       expect(prisma.resume.findFirst).toHaveBeenCalledWith({
         where: { id: "resume-1", profile: { userId: mockUser.id } },
-        select: { _count: { select: { ResumeSections: true } } },
+        select: { FileId: true, _count: { select: { ResumeSections: true } } },
       });
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: mockUser.id },
@@ -111,9 +111,27 @@ describe("Default Resume Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        message: "Add at least 2 sections before setting this resume as default.",
+        message:
+          "Add at least 2 sections (or attach a file) before setting this resume as default.",
       });
       expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it("accepts a file-only resume with no sections", async () => {
+      (getCurrentUser as any).mockResolvedValue(mockUser);
+      (prisma.resume.findFirst as any).mockResolvedValue({
+        FileId: "file-1",
+        _count: { ResumeSections: 0 },
+      });
+      (prisma.user.update as any).mockResolvedValue({});
+
+      const result = await setDefaultResume("uploaded-resume");
+
+      expect(result).toEqual({ success: true });
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: mockUser.id },
+        data: { defaultResumeId: "uploaded-resume" },
+      });
     });
 
     it("rejects a resume the user does not own and leaves the pointer unchanged", async () => {

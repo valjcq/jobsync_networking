@@ -3,7 +3,8 @@ import type { RefObject } from "react";
 import { ArrowLeft, FileDown, MoreVertical, Sparkles, Star } from "lucide-react";
 import type { Resume } from "@/models/profile.model";
 import {
-  hasMinResumeSections,
+  isResumeUsable,
+  UNUSABLE_RESUME_HINT,
   warnInsufficientResumeSections,
 } from "@/utils/resumeSections.utils";
 import { Badge } from "../../ui/badge";
@@ -87,9 +88,12 @@ export function ResumeHeader({
               <DropdownMenuItem
                 className="cursor-pointer"
                 onClick={() => {
-                  if (!hasMinResumeSections(resume.ResumeSections?.length)) {
+                  if (
+                    !isResumeUsable(resume.ResumeSections?.length, !!resume.FileId)
+                  ) {
                     warnInsufficientResumeSections(
                       "setting this resume as default",
+                      UNUSABLE_RESUME_HINT,
                     );
                     return;
                   }

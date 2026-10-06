@@ -2,9 +2,11 @@ import { toastError } from "@/lib/toast";
 import {
   buildInsufficientSectionsMessage,
   hasMinResumeSections,
+  isResumeUsable,
+  UNUSABLE_RESUME_HINT,
 } from "@/lib/resumeSections";
 
-export { hasMinResumeSections };
+export { hasMinResumeSections, isResumeUsable, UNUSABLE_RESUME_HINT };
 
 export const warnInsufficientResumeSections = (
   action: string,
