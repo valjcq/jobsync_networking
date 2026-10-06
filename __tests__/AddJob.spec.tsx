@@ -10,6 +10,7 @@ import { addJob, updateJob } from "@/actions/job.actions";
 import { toastActionResult } from "@/lib/toast";
 import type { JobResponse } from "@/models/job.model";
 import { APP_CONSTANTS } from "@/lib/constants";
+import { getDefaultResumeId, getResumeList } from "@/actions/profile.actions";
 vi.mock("@/utils/user.utils", () => ({
   getCurrentUser: vi.fn(),
 }));
@@ -24,6 +25,12 @@ vi.mock("@/actions/note.actions", () => ({
   addNote: vi.fn(),
   updateNote: vi.fn(),
   deleteNote: vi.fn(),
+}));
+
+vi.mock("@/actions/profile.actions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/actions/profile.actions")>()),
+  getResumeList: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  getDefaultResumeId: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@/lib/toast", () => ({
@@ -574,4 +581,65 @@ describe("AddJob Component - Error Handling", () => {
       );
     });
   }, 10000);
+});
+
+describe("AddJob Component - Default Resume", () => {
+  const resumes = [
+    { id: "resume-other", title: "Older CV" },
+    { id: "resume-default", title: "Uploaded CV" },
+  ];
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getResumeList as any).mockResolvedValue({ success: true, data: resumes });
+    (getDefaultResumeId as any).mockResolvedValue("resume-default");
+  });
+
+  afterEach(() => {
+    (getResumeList as any).mockResolvedValue({ success: true, data: [] });
+    (getDefaultResumeId as any).mockResolvedValue(null);
+  });
+
+  async function renderAddJob(editJob: JobResponse | null = null) {
+    render(
+      <AddJob
+        jobStatuses={JOB_STATUSES}
+        companies={(await getMockList(1, 10, "companies")).data}
+        jobTitles={(await getMockList(1, 10, "jobTitles")).data}
+        locations={(await getMockList(1, 10, "locations")).data}
+        jobSources={JOB_SOURCES}
+        tags={[]}
+        editJob={editJob}
+        resetEditJob={vi.fn()}
+      />,
+    );
+  }
+
+  it("pre-selects the default resume for a new job", async () => {
+    await renderAddJob();
+    await userEvent.setup({ skipHover: true }).click(screen.getByTestId("add-job-btn"));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("Select Resume")).toHaveTextContent("Uploaded CV"),
+    );
+  });
+
+  it("leaves the resume alone when editing a job", async () => {
+    await renderAddJob({
+      id: "job-1",
+      userId: "user-id",
+      JobTitle: { id: "1xx", label: "Engineer", value: "engineer" },
+      Company: { id: "2zz", label: "Amazon", value: "amazon", logoUrl: "" },
+      Status: { id: JOB_STATUSES[0].id, label: "Draft", value: "draft" },
+      jobType: "FT",
+      description: "<p>x</p>",
+      applied: false,
+    } as unknown as JobResponse);
+
+    await waitFor(() => expect(getResumeList).toHaveBeenCalled());
+    expect(getDefaultResumeId).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Select Resume")).toHaveTextContent("Select Resume");
+  });
 });
