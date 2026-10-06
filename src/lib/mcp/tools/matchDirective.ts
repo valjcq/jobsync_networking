@@ -1,6 +1,10 @@
 import { APP_CONSTANTS } from "@/lib/constants";
 import { getDefaultResumeForUser } from "@/lib/jobs/getDefaultResumeForUser";
-import { preprocessResume } from "@/lib/ai/tools/preprocessing";
+import {
+  preprocessResume,
+  describeResumeFailure,
+  type ResumeTextSource,
+} from "@/lib/ai/tools/preprocessing";
 import type { DescriptionCompleteness } from "@/models/job.model";
 
 export function buildMatchDirective(
@@ -9,6 +13,7 @@ export function buildMatchDirective(
   normalizedResumeText: string,
   completeness: DescriptionCompleteness,
   context: "add" | "update",
+  resumeSource: ResumeTextSource = "sections",
 ): string {
   const source =
     context === "add"
@@ -28,7 +33,7 @@ export function buildMatchDirective(
   return (
     `Produce a job-fit match of JobSync job id ${jobId} against the user's ` +
     `default resume, shown below.${warning}\n\n` +
-    `DEFAULT RESUME (normalized):\n${normalizedResumeText}\n\n` +
+    `DEFAULT RESUME (${resumeHeading(resumeSource)}):\n${normalizedResumeText}\n\n` +
     `INSTRUCTIONS:\n` +
     `- Analyze fit between the resume above and ${source}.\n` +
     `- Use ONLY the resume and that job description. Do not invent employers,\n` +
@@ -49,6 +54,14 @@ export function buildMatchDirective(
     `- Then call save_match_result with:\n` +
     `    { "jobId": "${jobId}", "resumeId": "${resumeId}", "matchText": "<the full SCORES line + markdown body>" }`
   );
+}
+
+// Text pulled from a PDF can lose its layout (columns, bullet nesting), so say
+// so rather than let the agent read a jumbled order as the candidate's own.
+export function resumeHeading(source: ResumeTextSource): string {
+  return source === "file"
+    ? "text extracted from the attached file; layout may be lost"
+    : "normalized";
 }
 
 // Decides whether a match is offered at all, and returns either the
@@ -83,7 +96,7 @@ export async function buildMatchOffer(
   if (!pre.success) {
     return {
       kind: "note",
-      text: "Default resume couldn't be used for matching (it may be too short or missing content) — check it in Profile → Resumes.",
+      text: `Default resume couldn't be used for matching. ${describeResumeFailure(pre.error?.code)}`,
     };
   }
 
@@ -95,6 +108,7 @@ export async function buildMatchOffer(
       pre.data.normalizedText,
       completeness,
       context,
+      pre.data.source,
     ),
   };
 }

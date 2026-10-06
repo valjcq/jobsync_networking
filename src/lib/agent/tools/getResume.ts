@@ -3,7 +3,10 @@ import { APP_CONSTANTS } from "@/lib/constants";
 import { AGENT_TOOL_DESCRIPTIONS } from "@/lib/agent/prompt";
 import { AgentGetResumeSchema } from "@/models/agent.schema";
 import { resolveResumeForAgent } from "@/lib/agent/resumeLookup";
-import { preprocessResume } from "@/lib/ai/tools/preprocessing";
+import {
+  preprocessResume,
+  describeResumeFailure,
+} from "@/lib/ai/tools/preprocessing";
 import { log } from "@/lib/telemetry";
 import type { AgentGetResumeResult } from "@/models/agent.model";
 
@@ -37,7 +40,7 @@ export function buildGetResumeTool(userId: string, pageResumeId?: string) {
           return {
             status: "unreadable",
             title,
-            reason: "It may be too short or missing content. Check it in Profile → Resumes.",
+            reason: describeResumeFailure(pre.error?.code),
           };
         }
 

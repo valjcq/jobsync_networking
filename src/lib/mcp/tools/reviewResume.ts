@@ -1,7 +1,11 @@
 import { APP_CONSTANTS } from "@/lib/constants";
 import { checkMcpRateLimit } from "@/lib/mcp/rate-limit";
 import { getDefaultResumeForUser } from "@/lib/jobs/getDefaultResumeForUser";
-import { preprocessResume } from "@/lib/ai/tools/preprocessing";
+import {
+  preprocessResume,
+  describeResumeFailure,
+  type ResumeTextSource,
+} from "@/lib/ai/tools/preprocessing";
 import {
   RESUME_REVIEW_SYSTEM_PROMPT,
   buildResumeReviewPrompt,
@@ -14,10 +18,19 @@ import {
 function buildReviewDirective(
   resumeId: string,
   normalizedResumeText: string,
+  source: ResumeTextSource = "sections",
 ): string {
+  // Extracted PDF text carries no visual layout, so a formatting score from it
+  // would be a guess about something the reviewer cannot see.
+  const fileNote =
+    source === "file"
+      ? `The resume text was extracted from the attached file, so its visual ` +
+        `layout is lost: judge content, not formatting.\n\n`
+      : "";
   return (
     `Act as the reviewer described below and produce a review of the ` +
     `resume shown here.\n\n` +
+    fileNote +
     `${RESUME_REVIEW_SYSTEM_PROMPT}\n\n` +
     `${buildResumeReviewPrompt(normalizedResumeText)}\n\n` +
     `Then call save_resume_review with the full SCORES line + markdown body ` +
@@ -57,7 +70,7 @@ export async function handleReviewResume(
       content: [
         {
           type: "text",
-          text: "Default resume couldn't be used for review (it may be too short or missing content) — check it in Profile → Resumes.",
+          text: `Default resume couldn't be used for review. ${describeResumeFailure(pre.error?.code)}`,
         },
       ],
     };
@@ -71,6 +84,10 @@ export async function handleReviewResume(
     };
   }
 
-  const directive = buildReviewDirective(resume.id!, pre.data.normalizedText);
+  const directive = buildReviewDirective(
+    resume.id!,
+    pre.data.normalizedText,
+    pre.data.source,
+  );
   return { content: [{ type: "text", text: directive }] };
 }

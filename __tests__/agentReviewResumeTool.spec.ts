@@ -10,7 +10,10 @@ import {
 } from "@/lib/ai/prompts/resume-review";
 
 vi.mock("@/lib/agent/resumeLookup", () => ({ resolveResumeForAgent: vi.fn() }));
-vi.mock("@/lib/ai/tools/preprocessing", () => ({ preprocessResume: vi.fn() }));
+vi.mock("@/lib/ai/tools/preprocessing", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai/tools/preprocessing")>()),
+  preprocessResume: vi.fn(),
+}));
 vi.mock("@/actions/profile.actions", () => ({
   saveResumeReviewResult: vi.fn(),
 }));
