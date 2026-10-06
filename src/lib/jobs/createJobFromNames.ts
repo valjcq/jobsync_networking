@@ -126,6 +126,11 @@ export async function createJobFromNames(
 
   const descriptionCompleteness = classifyDescriptionCompleteness(jobDescription);
 
+  // An application already sent went out with some resume; the default is
+  // the best guess, as in the UI's Add Job form. Not for jobs only saved to
+  // look at later, where no resume has been sent yet.
+  const resumeId = applied ? await getDefaultResumeId(userId) : null;
+
   const job = await createJobRecord({
     jobTitleId: resolvedTitle.id,
     companyId: resolvedCompany.id,
@@ -144,12 +149,15 @@ export async function createJobFromNames(
     userId,
     jobUrl: jobUrl ? normalizeJobUrl(jobUrl) : null,
     applied,
+    resumeId,
     tagIds: resolvedTagsResult.resolved.map((t) => t.id),
     createdVia: createdVia ?? null,
     descriptionCompleteness,
   });
 
-  const message = buildSuccessMessage(resolutions, resolvedTagsResult.dropped, job.id);
+  const message =
+    buildSuccessMessage(resolutions, resolvedTagsResult.dropped, job.id) +
+    (resumeId ? " Attached the default resume as the one sent." : "");
 
   return {
     created: true,
@@ -224,4 +232,12 @@ function buildDuplicateMessage(
     `Pass allowDuplicate: true only if this is genuinely a different posting. ` +
     `Resolutions: ${parts.join("; ")}.`
   );
+}
+
+async function getDefaultResumeId(userId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { defaultResumeId: true },
+  });
+  return user?.defaultResumeId ?? null;
 }
