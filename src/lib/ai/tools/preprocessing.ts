@@ -22,15 +22,20 @@ import {
   validateText,
   type TextMetadata,
 } from "./text-processing";
+import { readResumeFileText } from "@/lib/resumes/resumeFileText";
 
 // TYPES
 
 export type ResumeMetadata = TextMetadata;
 
+// Where the text came from: the resume's sections, or its attached file.
+export type ResumeTextSource = "sections" | "file";
+
 export interface PreprocessedResume {
   normalizedText: string;
   metadata: ResumeMetadata;
   isValid: boolean;
+  source?: ResumeTextSource;
 }
 
 export type PreprocessingResult =
@@ -302,9 +307,47 @@ export const preprocessText = async (
   }
 };
 
+// Sections first; when they are too thin and a file is attached, the file's
+// text instead. Uploaded resumes have no sections since the AI structuring was
+// removed, so without the fallback every file-only resume fails here.
 export const preprocessResume = async (
   resume: Resume,
 ): Promise<PreprocessingResult> => {
-  const rawText = await convertResumeToText(resume);
-  return preprocessText(rawText);
+  const sectionText = await convertResumeToText(resume);
+  const filePath = resume.File?.filePath;
+  if (sectionText.trim().length >= MIN_CHAR_COUNT || !filePath) {
+    return withSource(await preprocessText(sectionText), "sections");
+  }
+
+  const fromFile = await readResumeFileText(filePath);
+  if (!fromFile.success) {
+    return { success: false, error: fromFile.error };
+  }
+  return withSource(await preprocessText(fromFile.text), "file");
 };
+
+function withSource(
+  result: PreprocessingResult,
+  source: ResumeTextSource,
+): PreprocessingResult {
+  return result.success ? { success: true, data: { ...result.data, source } } : result;
+}
+
+// One wording for every surface that has to say why a resume can't be used.
+export function describeResumeFailure(code: string | undefined): string {
+  switch (code) {
+    case "NO_TEXT":
+      return "Its attached file has no readable text — it may be a scanned or image-only PDF (OCR isn't supported). Upload a text-based PDF or DOCX in Profile → Resumes.";
+    case "ENCRYPTED":
+      return "Its attached file is password-protected. Upload an unprotected copy in Profile → Resumes.";
+    case "UNSUPPORTED_FORMAT":
+      return "Its attached file isn't a PDF or DOCX. Upload one in Profile → Resumes.";
+    case "FILE_NOT_FOUND":
+      return "Its attached file is missing on the server. Re-upload it in Profile → Resumes.";
+    case "EXTRACTION_FAILED":
+    case "DECOMPRESSION_BOMB":
+      return "Its attached file couldn't be read. Try re-uploading it in Profile → Resumes.";
+    default:
+      return "It has too little content (no attached file and few or no sections). Upload a file or add sections in Profile → Resumes.";
+  }
+}

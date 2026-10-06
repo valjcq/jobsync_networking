@@ -2,8 +2,9 @@ import { JobResponse } from "@/models/job.model";
 import { AiProvider } from "@/models/ai.model";
 import { APP_CONSTANTS } from "@/lib/constants";
 
-// Re-export for backwards compatibility
-export { convertResumeToText } from "@/lib/ai/tools/preprocessing";
+// Re-export for backwards compatibility. convertResumeToText is deliberately
+// not re-exported: client components import this file, and preprocessing.ts
+// now reads resume files from disk (server-only).
 export { convertJobToText } from "@/lib/ai/tools/preprocessing-job";
 
 export interface OllamaConnectionResult {
