@@ -47,7 +47,7 @@ export type PreprocessingResult =
 
 // VALIDATION THRESHOLDS
 
-const MIN_CHAR_COUNT = 200;
+export const MIN_CHAR_COUNT = 200;
 const MAX_WORD_COUNT = 10000;
 
 // Re-export shared utilities for backward compatibility

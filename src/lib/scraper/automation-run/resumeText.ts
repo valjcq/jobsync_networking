@@ -1,4 +1,6 @@
 import { removeHtmlTags } from "@/lib/ai";
+import { MIN_CHAR_COUNT } from "@/lib/ai/tools/preprocessing";
+import { readResumeFileText } from "@/lib/resumes/resumeFileText";
 import type { ResumeWithSections } from "./types";
 
 export function extractResumeSkills(resume: ResumeWithSections): string[] {
@@ -101,5 +103,14 @@ export async function convertResumeForMatch(
     }
   }
 
-  return parts.filter(Boolean).join("\n");
+  const fromSections = parts.filter(Boolean).join("\n");
+
+  // A file-only resume (uploaded, no sections) gives just the title above;
+  // score against the attached file's text instead, like preprocessResume.
+  const body = fromSections.slice(parts[0].length).trim();
+  if (body.length >= MIN_CHAR_COUNT || !resume.File?.filePath) {
+    return fromSections;
+  }
+  const fromFile = await readResumeFileText(resume.File.filePath);
+  return fromFile.success ? `${parts[0]}\n\n${fromFile.text}` : fromSections;
 }
