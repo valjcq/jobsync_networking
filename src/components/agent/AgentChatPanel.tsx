@@ -8,6 +8,7 @@ import { AgentChatInput } from "@/components/agent/AgentChatInput";
 import { AgentChatMessages } from "@/components/agent/AgentChatMessages";
 import { useAgentChat } from "@/components/agent/AgentChatProvider";
 import { AiProvider } from "@/models/ai.model";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export function AgentChatPanel() {
   const {
@@ -21,6 +22,10 @@ export function AgentChatPanel() {
     togglePanelExpand,
     preflight,
   } = useAgentChat();
+
+  // Docked beside the page from lg up. Below that it covers the screen, so it
+  // is modal: otherwise the page behind keeps scrolling under the keyboard.
+  const isOverlay = useMediaQuery("(max-width: 1023px)");
 
   // Status icon for the terminal header bar — same shape the other AI
   // surfaces use for their provider preflight.
@@ -46,7 +51,7 @@ export function AgentChatPanel() {
       onOpenChange={(next) => {
         if (!next) close();
       }}
-      modal={false}
+      modal={isOverlay}
     >
       <SheetContent
         overlay={false}
@@ -73,11 +78,11 @@ export function AgentChatPanel() {
           <div className="h-full w-px bg-transparent group-hover:bg-primary/50 transition-colors" />
         </div>
 
-        <div className="flex items-center gap-3 px-4 py-2.5 border-b bg-muted/20 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 px-4 py-2.5 border-b bg-muted/20 shrink-0">
           <SheetTitle className="text-[11px] font-bold tracking-[0.15em] uppercase text-foreground leading-none shrink-0 m-0">
             AI AGENT
           </SheetTitle>
-          <span className="text-muted-foreground/30 text-xs select-none">
+          <span className="hidden sm:inline text-muted-foreground/30 text-xs select-none">
             ···
           </span>
           <div className="flex items-center gap-1.5 min-w-0">
@@ -126,7 +131,7 @@ export function AgentChatPanel() {
           )}
         </div>
 
-        <div className="shrink-0 border-t p-3">
+        <div className="shrink-0 border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="lg:mx-auto lg:w-full lg:max-w-6xl">
             <AgentChatInput />
           </div>

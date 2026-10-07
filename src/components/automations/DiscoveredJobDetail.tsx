@@ -114,7 +114,7 @@ export function DiscoveredJobDetail({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <div className="flex items-start justify-between gap-4 pr-8">
             <div className="min-w-0 space-y-1.5">

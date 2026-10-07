@@ -202,7 +202,7 @@ function JobDetails({
         <JobTodosCard todos={job.tasks ?? []} />
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList>
+          <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="description">Description</TabsTrigger>
             <TabsTrigger value="match">AI Match</TabsTrigger>
             <TabsTrigger value="letter">Cover Letter</TabsTrigger>

@@ -26,72 +26,90 @@ function TasksSidebar({
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div
-      className={cn(
-        "relative border-r py-4 hidden md:flex flex-col sticky top-4 self-start transition-all duration-200 -ml-3",
-        collapsed ? "w-0 overflow-visible" : "w-48",
-      )}
-    >
-      <button
-        onClick={() => setCollapsed((prev) => !prev)}
-        className="absolute -right-3 top-4 z-10 flex items-center justify-center w-6 h-6 rounded-full border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+    <>
+      {/* The side panel is desktop-only; this is its phone-width stand-in. */}
+      <select
+        className="md:hidden mb-3 h-9 w-full rounded-md border bg-background px-3 text-sm"
+        aria-label="Filter by activity type"
+        value={selectedFilter ?? ""}
+        onChange={(e) => onFilterChange(e.target.value || undefined)}
       >
-        {collapsed ? (
-          <ChevronRight className="h-3.5 w-3.5" />
-        ) : (
-          <ChevronLeft className="h-3.5 w-3.5" />
+        <option value="">All ({totalTasks})</option>
+        {activityTypes
+          .filter((type) => type.taskCount > 0)
+          .map((type) => (
+            <option key={type.id} value={type.id}>
+              {type.label} ({type.taskCount})
+            </option>
+          ))}
+      </select>
+      <div
+        className={cn(
+          "relative border-r py-4 hidden md:flex flex-col sticky top-4 self-start transition-all duration-200 -ml-3",
+          collapsed ? "w-0 overflow-visible" : "w-48",
         )}
-      </button>
+      >
+        <button
+          onClick={() => setCollapsed((prev) => !prev)}
+          className="absolute -right-3 top-4 z-10 flex items-center justify-center w-6 h-6 rounded-full border bg-background text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronLeft className="h-3.5 w-3.5" />
+          )}
+        </button>
 
-      {!collapsed && (
-        <>
-          <h3 className="font-semibold mb-4 text-sm px-1">Activity Types</h3>
-          <ul className="space-y-1">
-            <li>
-              <button
-                onClick={() => onFilterChange(undefined)}
-                className={cn(
-                  "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
-                  "hover:bg-accent hover:text-accent-foreground",
-                  !selectedFilter &&
-                    "bg-accent text-accent-foreground font-medium",
-                )}
-              >
-                <span className="flex justify-between items-center">
-                  <span>All</span>
-                  <span className="text-muted-foreground text-xs">
-                    {totalTasks}
-                  </span>
-                </span>
-              </button>
-            </li>
-            {activityTypes
-              .filter((type) => type.taskCount > 0)
-              .map((type) => (
-                <li key={type.id}>
-                  <button
-                    onClick={() => onFilterChange(type.id)}
-                    className={cn(
-                      "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
-                      "hover:bg-accent hover:text-accent-foreground",
-                      selectedFilter === type.id &&
-                        "bg-accent text-accent-foreground font-medium",
-                    )}
-                  >
-                    <span className="flex justify-between items-center">
-                      <span className="truncate">{type.label}</span>
-                      <span className="text-muted-foreground text-xs">
-                        {type.taskCount}
-                      </span>
+        {!collapsed && (
+          <>
+            <h3 className="font-semibold mb-4 text-sm px-1">Activity Types</h3>
+            <ul className="space-y-1">
+              <li>
+                <button
+                  onClick={() => onFilterChange(undefined)}
+                  className={cn(
+                    "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
+                    "hover:bg-accent hover:text-accent-foreground",
+                    !selectedFilter &&
+                      "bg-accent text-accent-foreground font-medium",
+                  )}
+                >
+                  <span className="flex justify-between items-center">
+                    <span>All</span>
+                    <span className="text-muted-foreground text-xs">
+                      {totalTasks}
                     </span>
-                  </button>
-                </li>
-              ))}
-          </ul>
-        </>
-      )}
-    </div>
+                  </span>
+                </button>
+              </li>
+              {activityTypes
+                .filter((type) => type.taskCount > 0)
+                .map((type) => (
+                  <li key={type.id}>
+                    <button
+                      onClick={() => onFilterChange(type.id)}
+                      className={cn(
+                        "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
+                        "hover:bg-accent hover:text-accent-foreground",
+                        selectedFilter === type.id &&
+                          "bg-accent text-accent-foreground font-medium",
+                      )}
+                    >
+                      <span className="flex justify-between items-center">
+                        <span className="truncate">{type.label}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {type.taskCount}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          </>
+        )}
+      </div>
+    </>
   );
 }
 

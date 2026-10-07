@@ -113,7 +113,7 @@ function CreateCoverLetter({
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogContent className="lg:max-w-screen-md lg:max-h-screen overflow-y-scroll">
+      <DialogContent className="lg:max-w-screen-md">
         <DialogHeader>
           <DialogTitle>{pageTitle}</DialogTitle>
           <DialogDescription>{pageDescription}</DialogDescription>

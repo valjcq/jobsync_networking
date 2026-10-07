@@ -55,7 +55,7 @@ export function ResumePreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[85vh] flex-col sm:max-w-3xl">
+      <DialogContent className="flex h-[85dvh] flex-col sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
