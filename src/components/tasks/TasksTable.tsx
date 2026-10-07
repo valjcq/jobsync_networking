@@ -58,6 +58,7 @@ import {
   TaskGroupBy,
   TaskStatus,
 } from "@/models/task.model";
+import Link from "next/link";
 import { DeleteAlertDialog } from "../DeleteAlertDialog";
 import { getDescriptionExcerpt, hasDescription } from "@/lib/tasks/description";
 
@@ -266,6 +267,24 @@ function TasksTable({
                 {getDescriptionExcerpt(task.description)}
               </TooltipContent>
             </Tooltip>
+          )}
+          {task.Job && (
+            <Link
+              href={`/dashboard/myjobs/${task.Job.id}`}
+              className="max-w-[12rem] truncate rounded-full border px-2 py-0.5 text-xs font-normal text-muted-foreground hover:text-foreground"
+              data-testid="task-job-chip"
+              title={`${task.Job.JobTitle.label} @ ${task.Job.Company.label}`}
+            >
+              {task.Job.Company.label}
+            </Link>
+          )}
+          {task.Contact && (
+            <span
+              className="max-w-[12rem] truncate rounded-full border px-2 py-0.5 text-xs font-normal text-muted-foreground"
+              data-testid="task-contact-chip"
+            >
+              {task.Contact.name}
+            </span>
           )}
         </span>
       </TableCell>

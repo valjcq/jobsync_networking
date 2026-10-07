@@ -1,9 +1,9 @@
 ---
 type: how-to
 title: MCP Access
-description: Connecting an external AI agent such as Claude Desktop or Claude Code to JobSync over MCP — generating a token, adding the connector, the thirteen tools an agent gets, and the limits.
+description: Connecting an external AI agent such as Claude Desktop or Claude Code to JobSync over MCP — generating a token, adding the connector, the tools an agent gets (search, todos, jobs, networking), and the limits.
 feature: mcp
-tags: [mcp, claude desktop, claude code, networking, networking:write, scope, agent, connector, personal access token, integration, add job from chat, mcp-remote, streamable-http, token, revoke]
+tags: [mcp, claude desktop, claude code, networking, networking:write, tasks:write, search, todo, scope, agent, connector, personal access token, integration, add job from chat, mcp-remote, streamable-http, token, revoke]
 aliases: [model context protocol, connect claude, claude desktop integration, api token, personal access token, agent access, external agent]
 status: stable
 stale_after: 2027-09-02
@@ -13,9 +13,9 @@ stale_after: 2027-09-02
 
 ## What can an AI agent do with JobSync over MCP?
 
-It can add and correct jobs, add Question Bank entries, save a job-match or resume review that it produced itself, and keep your networking up to date: add contacts, log interactions and list the follow-ups that are due. JobSync runs a built-in MCP (Model Context Protocol) server, so a chat client such as Claude Desktop can write to your tracker without you switching to the app — paste a posting into your agent and ask it to add the job, and the company, title, location, source and tags resolve against your existing lists.
+It can add and correct jobs, add Question Bank entries, save a job-match or resume review that it produced itself, and keep your networking up to date: add contacts, log interactions and list the follow-ups that are due. It can also search everything by name, read a job or contact in full, move any job to a new status, add a note to it, tick off a follow-up and manage your to-do list. JobSync runs a built-in MCP (Model Context Protocol) server, so a chat client such as Claude Desktop can write to your tracker without you switching to the app — paste a posting into your agent and ask it to add the job, and the company, title, location, source and tags resolve against your existing lists.
 
-Two things stay in your control. Every connection needs a personal access token you generate yourself, and each token is named — jobs it creates carry that name as their source, and an agent can only edit jobs that were created through MCP in the first place. Nothing an agent does can overwrite a job you curated in the app.
+Two things stay in your control. Every connection needs a personal access token you generate yourself, and each token is named — jobs it creates carry that name as their source, and an agent can only edit the details of jobs that were created through MCP in the first place. On a job you added in the app it can change only the status and add notes; it cannot rewrite the job.
 
 JobSync runs no AI model on the MCP path. When the agent produces a match score or a resume review, it is the agent's own model doing the thinking; JobSync only hands over the material and stores the result.
 
@@ -71,30 +71,21 @@ Both snippets are shown in the token dialog with your real URL and token already
 
 ## Which tools does a connected agent get?
 
-Thirteen, all of them acting on your own data:
+Twenty-three, all of them acting on your own data. They fall into five groups, described one by one on [MCP Tools](./mcp-tools.md):
 
-- **add_job** — adds a job, resolving or creating company, title, location, source and tags by name, and reporting back what it matched versus created.
-- **add_jobs_batch** — the same thing for up to 10 jobs in one call, for a scheduled run.
-- **find_job** — checks by URL whether a posting is already saved, before adding it again.
-- **update_job** — corrects or enriches a job that was added through MCP. Only the fields supplied change.
-- **add_question** — adds an entry to your Question Bank, with tags resolved the same way.
-- **review_resume** / **save_resume_review** — hands the agent your default resume and reviewing instructions, then stores the review it writes.
-- **save_match_result** / **save_match_results_batch** — stores a job-fit analysis the agent produced after adding a job.
-
-The four networking tools work on your [Contacts](./contacts.md) and [Networking](./networking.md) data:
-
-- **find_contact** — looks up saved contacts by name, email or title. The agent calls it first, to get the contact's id. If several people match, or only part of a name does, it shows you the candidates instead of choosing for you.
-- **add_contact** — adds a person, resolving or creating company, location and role by name. It refuses a contact whose name, email or LinkedIn URL matches an existing one and returns the matches; the agent adds it anyway only after you confirm it is a different person.
-- **log_interaction** — records a conversation with a saved contact, with an optional outcome and next step. The purpose is matched against your list and created if it is missing. Logging the same contact, date, purpose and outcome twice returns the existing entry instead of a duplicate, unless you confirm it is a separate one. **Last contacted** moves forward exactly as it does when you log the interaction yourself.
-- **list_followups** — lists the next steps that are due today or earlier, oldest first. It only reads.
+- **Jobs** — add, batch-add, find by URL, correct, and (for any job) read in full, change the status, add a note.
+- **Search** — find jobs, contacts, companies, interactions and todos by name, so the agent never needs a link or an id from you.
+- **Networking** — find, add and read contacts, log interactions, list and tick off follow-ups.
+- **Todos** — add, list, update and complete the to-dos on your Tasks page.
+- **Resume and questions** — add Question Bank entries, review your default resume, store job-fit analyses.
 
 Dates go through MCP as `YYYY-MM-DD` and are read in the server's local time zone, the same day you would pick in the app.
 
 Tokens are issued with the scopes needed for all of these, so there is nothing to configure per tool. The one exception is a token created before the networking tools existed — see the next section.
 
-## Why do the networking tools say "Insufficient scope"?
+## Why do the networking or todo tools say "Insufficient scope"?
 
-The networking tools need the **networking:write** scope, which applies to all four, including the read-only ones. Tokens generated before the networking tools were added do not have it, and the scope cannot be added to an existing token. The other nine tools keep working with such a token, but a networking call fails with "Insufficient scope. Required: networking:write".
+The networking tools need the **networking:write** scope, which applies to all of them, including the read-only ones. The todo tools need **tasks:write**. Tokens generated before those tools were added do not have the scope, and a scope cannot be added to an existing token. The other tools keep working with such a token, but a networking call fails with "Insufficient scope. Required: networking:write", and a todo call with "Insufficient scope. Required: tasks:write". **search** works with any one of jobs, networking or tasks scopes and simply skips the kinds the token cannot read.
 
 The **Scopes** column on **Settings → MCP Access** shows what each token holds. To fix an older token, generate a new one, put it in your client, then revoke the old one (see [below](#how-do-i-revoke-a-token-or-see-which-agent-added-a-job)). Use the same name so the source on new jobs stays the same. Revoking does not delete anything the old token created.
 

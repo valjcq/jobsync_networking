@@ -15,7 +15,7 @@ stale_after: 2027-09-14
 
 A task is one piece of work you want to get done — tailor a resume, follow up with a recruiter, prepare for Thursday's interview. Each task holds a title, an activity type, a status, a priority from 0 to 10, a percent complete, an optional due date and a rich-text description.
 
-Tasks live under **Tasks** in the sidebar. Their activity type is what connects them to time tracking: starting an activity from a task logs the time you spend on it under **Activities**. Tasks are not linked to jobs; mention the job in the title or description if it matters.
+Tasks live under **Tasks** in the sidebar. Their activity type is what connects them to time tracking: starting an activity from a task logs the time you spend on it under **Activities**. A task can also point at a job and a contact, which only an AI agent connected over [MCP](./mcp.md) can set for now: such a task shows the job's company and the contact's name as small chips beside its title, and appears under **Open todos** on the job's page. Deleting the job or contact keeps the task and just removes the link.
 
 ## How do I add a task?
 

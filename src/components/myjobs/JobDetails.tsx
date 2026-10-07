@@ -40,6 +40,7 @@ import { JobTabEmptyState } from "./job-details/JobTabEmptyState";
 import { CoverLetterTab } from "./job-details/CoverLetterTab";
 import { useAutoMatch } from "./job-details/useAutoMatch";
 import { JobContactsTab } from "./job-details/JobContactsTab";
+import { JobTodosCard } from "./job-details/JobTodosCard";
 
 const JOB_DETAIL_TABS = [
   "description",
@@ -197,6 +198,8 @@ function JobDetails({
           currentStatus={currentStatus}
           matchData={parsedMatchData}
         />
+
+        <JobTodosCard todos={job.tasks ?? []} />
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList>

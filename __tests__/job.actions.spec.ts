@@ -826,6 +826,11 @@ describe("jobActions", () => {
           },
           orderBy: { createdAt: "asc" },
         },
+        tasks: {
+          where: { status: { in: ["in-progress", "needs-attention"] } },
+          select: { id: true, title: true, dueDate: true },
+          orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }],
+        },
       },
     });
   });

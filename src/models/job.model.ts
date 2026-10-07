@@ -59,6 +59,7 @@ export interface JobResponse {
   matchData?: string | null;
   tags?: Tag[];
   contactLinks?: JobContactLink[];
+  tasks?: { id: string; title: string; dueDate: Date | null }[];
   createdVia?: string | null;
   discoveryStatus?: string | null;
   descriptionCompleteness?: DescriptionCompleteness | null;
