@@ -135,3 +135,17 @@ tests:
     assert:
       - type: javascript
         value: file://./assertions.ts:assertRoutesToReviewResume
+
+  - description: Todo about a named job - searches for it before writing
+    vars:
+      userMessage: Add a todo to call Marie about the Acme job on Friday.
+    assert:
+      - type: javascript
+        value: file://./assertions.ts:assertSearchesBeforeWriting
+
+  - description: Status change on a job named without an id - searches first
+    vars:
+      userMessage: Mark the Acme data engineer job as interviewing.
+    assert:
+      - type: javascript
+        value: file://./assertions.ts:assertSearchesBeforeWriting

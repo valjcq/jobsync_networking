@@ -87,6 +87,14 @@ describe("taskActions", () => {
           activities: {
             select: { id: true },
           },
+          Job: {
+            select: {
+              id: true,
+              JobTitle: { select: { label: true } },
+              Company: { select: { label: true } },
+            },
+          },
+          Contact: { select: { id: true, name: true } },
         },
         orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
         skip: 0,
@@ -118,6 +126,14 @@ describe("taskActions", () => {
           activities: {
             select: { id: true },
           },
+          Job: {
+            select: {
+              id: true,
+              JobTitle: { select: { label: true } },
+              Company: { select: { label: true } },
+            },
+          },
+          Contact: { select: { id: true, name: true } },
         },
         orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
         skip: 10,
@@ -149,6 +165,14 @@ describe("taskActions", () => {
           activities: {
             select: { id: true },
           },
+          Job: {
+            select: {
+              id: true,
+              JobTitle: { select: { label: true } },
+              Company: { select: { label: true } },
+            },
+          },
+          Contact: { select: { id: true, name: true } },
         },
         orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
         skip: 0,
@@ -183,6 +207,14 @@ describe("taskActions", () => {
           activities: {
             select: { id: true },
           },
+          Job: {
+            select: {
+              id: true,
+              JobTitle: { select: { label: true } },
+              Company: { select: { label: true } },
+            },
+          },
+          Contact: { select: { id: true, name: true } },
         },
         orderBy: [{ dueDate: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
         skip: 0,
@@ -206,6 +238,14 @@ describe("taskActions", () => {
           activities: {
             select: { id: true },
           },
+          Job: {
+            select: {
+              id: true,
+              JobTitle: { select: { label: true } },
+              Company: { select: { label: true } },
+            },
+          },
+          Contact: { select: { id: true, name: true } },
         },
         orderBy: [
           { dueDate: "asc" },
@@ -240,6 +280,14 @@ describe("taskActions", () => {
           activities: {
             select: { id: true },
           },
+          Job: {
+            select: {
+              id: true,
+              JobTitle: { select: { label: true } },
+              Company: { select: { label: true } },
+            },
+          },
+          Contact: { select: { id: true, name: true } },
         },
         orderBy: [
           { activityType: { label: "asc" } },
@@ -298,6 +346,14 @@ describe("taskActions", () => {
           activities: {
             select: { id: true },
           },
+          Job: {
+            select: {
+              id: true,
+              JobTitle: { select: { label: true } },
+              Company: { select: { label: true } },
+            },
+          },
+          Contact: { select: { id: true, name: true } },
         },
       });
     });

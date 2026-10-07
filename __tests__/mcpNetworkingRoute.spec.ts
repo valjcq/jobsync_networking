@@ -182,10 +182,10 @@ describe("new tokens", () => {
     }));
   });
 
-  it("are issued with networking:write alongside the existing scopes", async () => {
+  it("are issued with networking:write and tasks:write alongside the existing scopes", async () => {
     const res = await createMcpToken({ name: "agent", expiryDays: 30 });
     expect(res.success).toBe(true);
     const scopes = JSON.parse(db.mcpAccessToken.create.mock.calls[0][0].data.scopes);
-    expect(scopes).toEqual(["jobs:write", "questions:write", "resume:write", "networking:write"]);
+    expect(scopes).toEqual(["jobs:write", "questions:write", "resume:write", "networking:write", "tasks:write"]);
   });
 });

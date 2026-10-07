@@ -71,6 +71,12 @@ const JOB_DETAILS_INCLUDE = {
     },
     orderBy: { createdAt: "asc" as const },
   },
+  // Todos still to do, shown as a short list on the job page.
+  tasks: {
+    where: { status: { in: ["in-progress", "needs-attention"] } },
+    select: { id: true, title: true, dueDate: true },
+    orderBy: [{ dueDate: { sort: "asc" as const, nulls: "last" as const } }],
+  },
 };
 
 type JobsListFilters = {

@@ -185,6 +185,15 @@ async function seedFullAccount() {
   const task = await prisma.task.create({
     data: { userId, title: "Apply to Acme", activityTypeId: activityType.id },
   });
+  await prisma.task.create({
+    data: {
+      userId,
+      title: "Call Pat about Acme",
+      jobId: job.id,
+      contactId: contact.id,
+      createdVia: "my-token",
+    },
+  });
   await prisma.activity.create({
     data: {
       userId,
@@ -423,6 +432,50 @@ describe("backup round trip", () => {
     expect(
       await prisma.interactionPurpose.count({ where: { createdBy: userId } }),
     ).toBe(2);
+  }, 120_000);
+
+  it("restores a todo's job and contact links remapped, and imports a backup that predates them", async () => {
+    const linked = async (id: string) => {
+      const task = await prisma.task.findFirstOrThrow({
+        where: { userId: id, title: "Call Pat about Acme" },
+        include: { Job: true, Contact: true },
+      });
+      return {
+        createdVia: task.createdVia,
+        jobOwner: task.Job?.userId === id,
+        contact: task.Contact?.name,
+        contactOwner: task.Contact?.createdBy === id,
+      };
+    };
+
+    const { buffer } = await buildBackupZip(userId, "owner@example.com");
+    const cleanId = await seedAccount(prisma, "linked-todos@example.com");
+    await importBackup(buffer, cleanId, "linked-todos@example.com", false);
+    expect(await linked(cleanId)).toEqual({
+      createdVia: "my-token",
+      jobOwner: true,
+      contact: "Pat Lee",
+      contactOwner: true,
+    });
+
+    // What v1.1.20 wrote: Task rows without the three new fields.
+    const JSZip = (await import("jszip")).default;
+    const zip = await JSZip.loadAsync(buffer);
+    const data = JSON.parse(await zip.file("data.json")!.async("string"));
+    for (const row of data.Task) {
+      delete row.jobId;
+      delete row.contactId;
+      delete row.createdVia;
+    }
+    zip.file("data.json", JSON.stringify(data));
+    const legacy = await zip.generateAsync({ type: "nodebuffer" });
+
+    const legacyId = await seedAccount(prisma, "legacy-todos@example.com");
+    await importBackup(legacy, legacyId, "legacy-todos@example.com", false);
+    const task = await prisma.task.findFirstOrThrow({
+      where: { userId: legacyId, title: "Call Pat about Acme" },
+    });
+    expect([task.jobId, task.contactId, task.createdVia]).toEqual([null, null, null]);
   }, 120_000);
 
   it("exports, imports into a clean account, and compares equal", async () => {

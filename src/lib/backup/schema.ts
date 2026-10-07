@@ -284,6 +284,10 @@ const Task = z.object({
   percentComplete: int,
   dueDate: optDt,
   activityTypeId: optId,
+  // Optional: backups taken before todos could link a job or contact lack them.
+  jobId: optId.optional(),
+  contactId: optId.optional(),
+  createdVia: optStr.optional(),
   createdAt: dt,
   updatedAt: dt,
 });

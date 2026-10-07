@@ -22,6 +22,8 @@ const OPTIONAL_FKS = new Set<string>([
   "Contact.workedAtCompanyId",
   "Contact.roleId",
   "Task.activityTypeId",
+  "Task.jobId",
+  "Task.contactId",
   "Activity.taskId",
 ]);
 
