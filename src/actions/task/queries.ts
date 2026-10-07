@@ -10,6 +10,15 @@ const TASK_WITH_ACTIVITIES_INCLUDE = {
   activities: {
     select: { id: true },
   },
+  // What the todo is about, for the chip in the list.
+  Job: {
+    select: {
+      id: true,
+      JobTitle: { select: { label: true } },
+      Company: { select: { label: true } },
+    },
+  },
+  Contact: { select: { id: true, name: true } },
 };
 
 function getTasksOrderBy(groupBy?: TaskGroupBy) {

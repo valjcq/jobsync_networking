@@ -186,7 +186,7 @@ export const MODEL_SPECS: Record<BackupModel, ModelSpec> = {
   Task: {
     delegate: "task",
     owner: "userId",
-    fks: { activityTypeId: "ActivityType" },
+    fks: { activityTypeId: "ActivityType", jobId: "Job", contactId: "Contact" },
     scope: byUser,
   },
   Activity: {

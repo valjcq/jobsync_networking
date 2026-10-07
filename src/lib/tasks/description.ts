@@ -26,3 +26,16 @@ export function getDescriptionExcerpt(html?: string | null): string {
 
   return `${text.slice(0, EXCERPT_MAX_LENGTH).trimEnd()}…`;
 }
+
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// Plain text in (from an MCP agent), Tiptap HTML out: one <p> per paragraph,
+// single line breaks kept as <br>. Escaped, so nothing typed can inject markup.
+export function plainTextToHtml(text: string): string {
+  return text
+    .trim()
+    .split(/\n{2,}/)
+    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}

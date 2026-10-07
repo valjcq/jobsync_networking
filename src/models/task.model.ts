@@ -28,6 +28,14 @@ export interface Task {
   activityTypeId?: string | null;
   activityType?: ActivityType | null;
   activities?: { id: string }[];
+  jobId?: string | null;
+  Job?: {
+    id: string;
+    JobTitle: { label: string };
+    Company: { label: string };
+  } | null;
+  contactId?: string | null;
+  Contact?: { id: string; name: string } | null;
   createdAt: Date;
   updatedAt: Date;
 }

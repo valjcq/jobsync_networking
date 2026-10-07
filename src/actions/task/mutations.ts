@@ -5,10 +5,11 @@ import { TaskStatus } from "@/models/task.model";
 import { AddTaskFormSchema } from "@/models/addTaskForm.schema";
 import { z } from "zod";
 import { requireUser } from "../shared";
-
-const WITH_ACTIVITY_TYPE = {
-  activityType: true,
-};
+import {
+  createTaskForUser,
+  setTaskStatusForUser,
+  updateTaskForUser,
+} from "@/lib/tasks/tasks";
 
 export const createTask = async (
   data: z.infer<typeof AddTaskFormSchema>
@@ -18,18 +19,14 @@ export const createTask = async (
 
     const validatedData = AddTaskFormSchema.parse(data);
 
-    const task = await prisma.task.create({
-      data: {
-        title: validatedData.title,
-        description: validatedData.description,
-        status: validatedData.status,
-        priority: validatedData.priority,
-        percentComplete: validatedData.percentComplete,
-        dueDate: validatedData.dueDate,
-        activityTypeId: validatedData.activityTypeId,
-        userId: user.id,
-      },
-      include: WITH_ACTIVITY_TYPE,
+    const task = await createTaskForUser(user.id, {
+      title: validatedData.title,
+      description: validatedData.description,
+      status: validatedData.status,
+      priority: validatedData.priority,
+      percentComplete: validatedData.percentComplete,
+      dueDate: validatedData.dueDate,
+      activityTypeId: validatedData.activityTypeId,
     });
 
     return { success: true, data: task };
@@ -51,21 +48,14 @@ export const updateTask = async (
 
     const validatedData = AddTaskFormSchema.parse(data);
 
-    const task = await prisma.task.update({
-      where: {
-        id: data.id,
-        userId: user.id,
-      },
-      data: {
-        title: validatedData.title,
-        description: validatedData.description,
-        status: validatedData.status,
-        priority: validatedData.priority,
-        percentComplete: validatedData.percentComplete,
-        dueDate: validatedData.dueDate,
-        activityTypeId: validatedData.activityTypeId,
-      },
-      include: WITH_ACTIVITY_TYPE,
+    const task = await updateTaskForUser(user.id, data.id, {
+      title: validatedData.title,
+      description: validatedData.description,
+      status: validatedData.status,
+      priority: validatedData.priority,
+      percentComplete: validatedData.percentComplete,
+      dueDate: validatedData.dueDate,
+      activityTypeId: validatedData.activityTypeId,
     });
 
     return { success: true, data: task };
@@ -82,16 +72,7 @@ export const updateTaskStatus = async (
   try {
     const user = await requireUser();
 
-    const task = await prisma.task.update({
-      where: {
-        id: taskId,
-        userId: user.id,
-      },
-      data: {
-        status,
-      },
-      include: WITH_ACTIVITY_TYPE,
-    });
+    const task = await setTaskStatusForUser(user.id, taskId, status);
 
     return { success: true, data: task };
   } catch (error) {

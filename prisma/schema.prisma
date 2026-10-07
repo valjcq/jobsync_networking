@@ -248,6 +248,7 @@ model Contact {
 
   jobLinks          JobContact[]
   interactions      Interaction[]
+  tasks             Task[]
 
   @@index([createdBy])
   @@index([companyId])
@@ -400,6 +401,7 @@ model Job {
   tags        Tag[]
   contactLinks  JobContact[]
   interactions  Interaction[]
+  tasks         Task[]
 
   // Automation discovery fields
   automationId    String?
@@ -481,9 +483,21 @@ model Task {
 
   activities Activity[]
 
+  // Optional links to what the todo is about. SetNull: deleting the job or
+  // contact must not delete the todo.
+  jobId     String?
+  Job       Job?     @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  contactId String?
+  Contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  // MCP provenance: which agent/token created this todo (null = UI)
+  createdVia String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([userId, jobId])
+  @@index([userId, contactId])
   @@index([userId])
   @@index([userId, status])
   @@index([userId, activityTypeId])
@@ -608,7 +622,7 @@ model McpAccessToken {
   name        String
   tokenHash   String    @unique
   tokenPrefix String
-  scopes      String    // JSON array string; new tokens are always ["jobs:write","questions:write","resume:write"]
+  scopes      String    // JSON array string; new tokens get ["jobs:write","questions:write","resume:write","networking:write","tasks:write"]
   expiresAt   DateTime
   lastUsedAt  DateTime?
   createdAt   DateTime  @default(now())
