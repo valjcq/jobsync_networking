@@ -50,7 +50,7 @@ import { Combobox } from "../ComboBox";
 import { NotesCollapsibleSection } from "./NotesCollapsibleSection";
 import { CoverLetter, Resume } from "@/models/profile.model";
 import CreateResume from "../profile/CreateResume";
-import { getResumeList } from "@/actions/profile.actions";
+import { getDefaultResumeId, getResumeList } from "@/actions/profile.actions";
 import { getCoverLetterList } from "@/actions/coverLetter.actions";
 import { TagInput } from "./TagInput";
 import { APP_CONSTANTS } from "@/lib/constants";
@@ -91,6 +91,7 @@ export function AddJob({
   const [dialogOpen, setDialogOpen] = useState(initialOpen ?? false);
   const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
   const [resumes, setResumes] = useState<Resume[]>([]);
+  const [defaultResumeId, setDefaultResumeId] = useState<string | null>(null);
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [availableTags, setAvailableTags] = useState<Tag[]>(tags);
   const [isPending, startTransition] = useTransition();
@@ -134,7 +135,7 @@ export function AddJob({
     defaultValues: newJobDefaultValues,
   });
 
-  const { setValue, reset, watch, resetField } = form;
+  const { setValue, getValues, reset, watch, resetField } = form;
 
   const appliedValue = watch("applied");
 
@@ -142,17 +143,31 @@ export function AddJob({
     try {
       // A resume is selectable here as soon as it has a file attached — it
       // doesn't need any parsed sections (unlike the AI-matching pickers).
-      const resumes = await getResumeList(
-        1,
-        APP_CONSTANTS.RECORDS_PER_PAGE,
-        0,
-        true,
-      );
+      const [resumes, defaultId] = await Promise.all([
+        getResumeList(1, APP_CONSTANTS.RECORDS_PER_PAGE, 0, true),
+        editJob ? null : getDefaultResumeId(),
+      ]);
       setResumes(resumes.data);
+      setDefaultResumeId(defaultId);
     } catch (error) {
       console.error("Failed to load resumes:", error);
     }
-  }, [setResumes]);
+  }, [setResumes, editJob]);
+
+  // A new job starts on the default resume, but never overrides a pick (e.g.
+  // a resume just created via "Add New"). Applied in an effect, after the
+  // options have rendered: Radix Select clears a value whose item doesn't
+  // exist yet, so setting it in the same tick as setResumes is lost.
+  useEffect(() => {
+    if (
+      !editJob &&
+      defaultResumeId &&
+      !getValues("resume") &&
+      resumes?.some((r) => r.id === defaultResumeId)
+    ) {
+      setValue("resume", defaultResumeId);
+    }
+  }, [resumes, defaultResumeId, editJob, getValues, setValue]);
 
   const loadCoverLetters = useCallback(async () => {
     try {

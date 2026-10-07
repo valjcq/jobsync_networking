@@ -169,6 +169,7 @@ async function runAutomationTraced(
       where: { id: automation.resumeId },
       include: {
         ContactInfo: true,
+        File: { select: { filePath: true } },
         ResumeSections: {
           include: {
             summary: true,

@@ -38,6 +38,8 @@ import { StatusBadge } from "../StatusBadge";
 import { DOCUMENT_TYPE_BADGE_COLORS } from "@/lib/badge-colors";
 import {
   hasMinResumeSections,
+  isResumeUsable,
+  UNUSABLE_RESUME_HINT,
   warnInsufficientResumeSections,
 } from "@/utils/resumeSections.utils";
 import { ResumePreviewDialog } from "./ResumePreviewDialog";
@@ -97,8 +99,11 @@ function DocumentTable({
 
   const onSetDefault = (doc: ProfileDocument) => {
     if (!doc.id) return;
-    if (!hasMinResumeSections(doc.sectionCount)) {
-      warnInsufficientResumeSections("setting this resume as default");
+    if (!isResumeUsable(doc.sectionCount, !!doc.FileId)) {
+      warnInsufficientResumeSections(
+        "setting this resume as default",
+        UNUSABLE_RESUME_HINT,
+      );
       return;
     }
     // Confirm whenever a different resume already holds the default. Decided by

@@ -6,7 +6,10 @@ import { APP_CONSTANTS } from "@/lib/constants";
 import { AGENT_TOOL_DESCRIPTIONS } from "@/lib/agent/prompt";
 import { AgentReviewResumeSchema } from "@/models/agent.schema";
 import { resolveResumeForAgent } from "@/lib/agent/resumeLookup";
-import { preprocessResume } from "@/lib/ai/tools/preprocessing";
+import {
+  preprocessResume,
+  describeResumeFailure,
+} from "@/lib/ai/tools/preprocessing";
 import {
   RESUME_REVIEW_SYSTEM_PROMPT,
   buildResumeReviewPrompt,
@@ -60,7 +63,7 @@ export function buildReviewResumeTool(ctx: ReviewResumeContext) {
         return {
           status: "unreadable",
           title,
-          reason: "It may be too short or missing content. Check it in Profile → Resumes.",
+          reason: describeResumeFailure(pre.error?.code),
         };
       }
 

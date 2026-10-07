@@ -9,7 +9,8 @@ vi.mock("@/lib/jobs/getDefaultResumeForUser", () => ({
   getDefaultResumeForUser: vi.fn(),
 }));
 
-vi.mock("@/lib/ai/tools/preprocessing", () => ({
+vi.mock("@/lib/ai/tools/preprocessing", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai/tools/preprocessing")>()),
   preprocessResume: vi.fn(),
 }));
 
@@ -88,6 +89,32 @@ describe("handleReviewResume", () => {
     expect(text).toContain("couldn't be used for review");
     expect(text).not.toContain("No default resume set");
     expect(text).not.toContain("save_resume_review");
+  });
+
+  it("says why a file-only resume can't be read", async () => {
+    (getDefaultResumeForUser as any).mockResolvedValue({ id: "resume-1" });
+    (preprocessResume as any).mockResolvedValue({
+      success: false,
+      error: { code: "FILE_NOT_FOUND", message: "missing" },
+    });
+
+    const result = await handleReviewResume("user-3");
+
+    expect(result.content[0].text).toContain("attached file is missing");
+  });
+
+  it("tells the reviewer not to judge layout when the text came from the file", async () => {
+    (getDefaultResumeForUser as any).mockResolvedValue({ id: "resume-1" });
+    (preprocessResume as any).mockResolvedValue({
+      success: true,
+      data: { normalizedText: longResumeText, metadata: {}, isValid: true, source: "file" },
+    });
+
+    const result = await handleReviewResume("user-1");
+    const text = result.content[0].text;
+
+    expect(text).toContain("judge content, not formatting");
+    expect(text).toContain("save_resume_review");
   });
 
   it("returns a too-short note when normalized text is under the length threshold", async () => {

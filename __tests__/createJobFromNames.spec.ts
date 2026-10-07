@@ -17,6 +17,7 @@ const prisma = new PrismaClient();
 vi.mock("@prisma/client", () => {
   const mPrismaClient = {
     job: { findFirst: vi.fn(), findMany: vi.fn() },
+    user: { findUnique: vi.fn() },
   };
   return { PrismaClient: vi.fn(function () { return mPrismaClient; }) };
 });
@@ -58,6 +59,30 @@ describe("createJobFromNames", () => {
     (prisma.job.findFirst as any).mockResolvedValue(null);
     (prisma.job.findMany as any).mockResolvedValue([]);
     (createJobRecord as any).mockResolvedValue({ id: "job-1" });
+    (prisma.user.findUnique as any).mockResolvedValue({ defaultResumeId: "resume-1" });
+  });
+
+  it("attaches the default resume to a job created as applied", async () => {
+    const result = await createJobFromNames({ ...baseInput, applied: true }, userId);
+
+    expect((createJobRecord as any).mock.calls[0][0].resumeId).toBe("resume-1");
+    expect(result.message).toContain("Attached the default resume");
+  });
+
+  it("attaches no resume to a job that isn't applied yet", async () => {
+    const result = await createJobFromNames(baseInput, userId);
+
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    expect((createJobRecord as any).mock.calls[0][0].resumeId).toBeNull();
+    expect(result.message).not.toContain("Attached the default resume");
+  });
+
+  it("creates an applied job without a resume when no default is set", async () => {
+    (prisma.user.findUnique as any).mockResolvedValue({ defaultResumeId: null });
+
+    await createJobFromNames({ ...baseInput, applied: true }, userId);
+
+    expect((createJobRecord as any).mock.calls[0][0].resumeId).toBeNull();
   });
 
   it("creates a job and reports matched/created resolutions in the message", async () => {

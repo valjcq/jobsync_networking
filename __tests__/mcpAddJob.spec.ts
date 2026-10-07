@@ -17,7 +17,8 @@ vi.mock("@/lib/jobs/getDefaultResumeForUser", () => ({
   getDefaultResumeForUser: vi.fn(),
 }));
 
-vi.mock("@/lib/ai/tools/preprocessing", () => ({
+vi.mock("@/lib/ai/tools/preprocessing", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai/tools/preprocessing")>()),
   preprocessResume: vi.fn(),
 }));
 
@@ -139,6 +140,40 @@ describe("handleAddJob match gating", () => {
 
     expect(text).toContain("couldn't be used for matching");
     expect(text).not.toContain("save_match_result");
+  });
+
+  it("names a scanned default resume instead of a generic note", async () => {
+    mockCreated("full");
+    (getDefaultResumeForUser as any).mockResolvedValue({ id: "resume-1" });
+    (preprocessResume as any).mockResolvedValue({
+      success: false,
+      error: { code: "NO_TEXT", message: "no text" },
+    });
+
+    const result = await handleAddJob(baseInput as any, "user-1", "my-token");
+
+    expect(result.content[0].text).toContain("scanned or image-only PDF");
+  });
+
+  it("labels a resume read from its attached file in the directive", async () => {
+    mockCreated("full");
+    (getDefaultResumeForUser as any).mockResolvedValue({ id: "resume-1" });
+    (preprocessResume as any).mockResolvedValue({
+      success: true,
+      data: {
+        normalizedText: "FILE RESUME TEXT",
+        metadata: {},
+        isValid: true,
+        source: "file",
+      },
+    });
+
+    const result = await handleAddJob(baseInput as any, "user-1", "my-token");
+    const text = result.content[0].text;
+
+    expect(text).toContain("DEFAULT RESUME (text extracted from the attached file");
+    expect(text).toContain("FILE RESUME TEXT");
+    expect(text).toContain("save_match_result");
   });
 
   it("returns the duplicate message with no match offer", async () => {

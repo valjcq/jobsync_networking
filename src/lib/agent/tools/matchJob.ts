@@ -7,7 +7,10 @@ import { AGENT_TOOL_DESCRIPTIONS } from "@/lib/agent/prompt";
 import { AgentMatchJobSchema } from "@/models/agent.schema";
 import { resolveJobForAgent } from "@/lib/agent/jobLookup";
 import { resolveResumeForAgent } from "@/lib/agent/resumeLookup";
-import { preprocessResume } from "@/lib/ai/tools/preprocessing";
+import {
+  preprocessResume,
+  describeResumeFailure,
+} from "@/lib/ai/tools/preprocessing";
 import { preprocessJob } from "@/lib/ai/tools/preprocessing-job";
 import {
   JOB_MATCH_SYSTEM_PROMPT,
@@ -81,7 +84,7 @@ export function buildMatchJobTool(ctx: MatchJobContext) {
           status: "unreadable",
           what: "resume",
           title: resume.title,
-          reason: "It may be too short or missing content. Check it in Profile → Resumes.",
+          reason: describeResumeFailure(resumePre.error?.code),
         };
       }
 

@@ -7,7 +7,10 @@ import { AGENT_TOOL_DESCRIPTIONS } from "@/lib/agent/prompt";
 import { AgentCoverLetterSchema } from "@/models/agent.schema";
 import { resolveJobForAgent } from "@/lib/agent/jobLookup";
 import { resolveResumeForAgent } from "@/lib/agent/resumeLookup";
-import { preprocessResume } from "@/lib/ai/tools/preprocessing";
+import {
+  preprocessResume,
+  describeResumeFailure,
+} from "@/lib/ai/tools/preprocessing";
 import { preprocessJob } from "@/lib/ai/tools/preprocessing-job";
 import {
   COVER_LETTER_SYSTEM_PROMPT,
@@ -84,14 +87,11 @@ export function buildGenerateCoverLetterTool(ctx: CoverLetterContext) {
         };
       }
       if (!resumePre.success) {
-        // Names the section count on purpose: the retired sheet filtered thin
-        // resumes out of the picker, and resolveResumeForAgent does not, so
-        // this message is now the only place the user learns the floor.
         return {
           status: "unreadable",
           what: "resume",
           title: resume.title,
-          reason: `It needs at least ${APP_CONSTANTS.MIN_RESUME_SECTIONS_FOR_SELECTION} sections with real content. Fill it in under Profile → Resumes and try again.`,
+          reason: describeResumeFailure(resumePre.error?.code),
         };
       }
 

@@ -13,7 +13,10 @@ import {
 
 vi.mock("@/lib/agent/jobLookup", () => ({ resolveJobForAgent: vi.fn() }));
 vi.mock("@/lib/agent/resumeLookup", () => ({ resolveResumeForAgent: vi.fn() }));
-vi.mock("@/lib/ai/tools/preprocessing", () => ({ preprocessResume: vi.fn() }));
+vi.mock("@/lib/ai/tools/preprocessing", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai/tools/preprocessing")>()),
+  preprocessResume: vi.fn(),
+}));
 vi.mock("@/lib/ai/tools/preprocessing-job", () => ({ preprocessJob: vi.fn() }));
 vi.mock("@/actions/coverLetter.actions", () => ({
   generateCoverLetterForJob: vi.fn(),

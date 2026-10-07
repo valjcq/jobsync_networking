@@ -1,6 +1,8 @@
 import {
   buildInsufficientSectionsMessage,
   hasMinResumeSections,
+  isResumeUsable,
+  toSelectableResumes,
 } from "@/lib/resumeSections";
 import { APP_CONSTANTS } from "@/lib/constants";
 
@@ -52,5 +54,33 @@ describe("buildInsufficientSectionsMessage", () => {
     const message = buildInsufficientSectionsMessage("running a review");
 
     expect(message).not.toContain("(");
+  });
+});
+
+describe("isResumeUsable", () => {
+  it("accepts an attached file without sections", () => {
+    expect(isResumeUsable(0, true)).toBe(true);
+  });
+
+  it("falls back to the section minimum without a file", () => {
+    expect(isResumeUsable(0, false)).toBe(false);
+    expect(
+      isResumeUsable(APP_CONSTANTS.MIN_RESUME_SECTIONS_FOR_SELECTION, false),
+    ).toBe(true);
+  });
+});
+
+describe("toSelectableResumes", () => {
+  it("keeps file-only and well-sectioned resumes, drops empty ones", () => {
+    const rows = [
+      { id: "a", title: "Uploaded", FileId: "f1", _count: { ResumeSections: 0 } },
+      { id: "b", title: "Built", FileId: null, _count: { ResumeSections: 3 } },
+      { id: "c", title: "Empty", FileId: null, _count: { ResumeSections: 0 } },
+    ];
+
+    expect(toSelectableResumes(rows)).toEqual([
+      { id: "a", title: "Uploaded" },
+      { id: "b", title: "Built" },
+    ]);
   });
 });

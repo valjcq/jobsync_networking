@@ -5,7 +5,10 @@ import { preprocessResume } from "@/lib/ai/tools/preprocessing";
 import { APP_CONSTANTS } from "@/lib/constants";
 
 vi.mock("@/lib/agent/resumeLookup", () => ({ resolveResumeForAgent: vi.fn() }));
-vi.mock("@/lib/ai/tools/preprocessing", () => ({ preprocessResume: vi.fn() }));
+vi.mock("@/lib/ai/tools/preprocessing", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai/tools/preprocessing")>()),
+  preprocessResume: vi.fn(),
+}));
 
 const resolve = resolveResumeForAgent as unknown as ReturnType<typeof vi.fn>;
 const preprocess = preprocessResume as unknown as ReturnType<typeof vi.fn>;

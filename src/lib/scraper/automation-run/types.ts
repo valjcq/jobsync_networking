@@ -14,6 +14,8 @@ export interface RunnerResult {
 }
 
 export interface ResumeWithSections extends PrismaResume {
+  // Read when the sections are too thin to match against (file-only uploads)
+  File?: { filePath: string } | null;
   ContactInfo: {
     firstName: string;
     lastName: string;
