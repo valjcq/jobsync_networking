@@ -28,7 +28,7 @@ export default function SettingsSidebar({
   onSectionChange,
 }: SettingsSidebarProps) {
   return (
-    <nav className="flex flex-col gap-1 w-48 shrink-0">
+    <nav className="flex gap-1 overflow-x-auto md:w-48 md:shrink-0 md:flex-col md:overflow-visible">
       {SETTINGS_SECTIONS.map((section) => {
         const Icon = section.icon;
         const isActive = activeSection === section.id;
@@ -37,10 +37,10 @@ export default function SettingsSidebar({
             key={section.id}
             variant="ghost"
             className={cn(
-              "justify-start gap-2 rounded-none border-l-2",
+              "shrink-0 justify-start gap-2 rounded-none border-b-2 md:border-b-0 md:border-l-2",
               isActive
-                ? "border-l-primary bg-muted font-medium"
-                : "border-l-transparent hover:border-l-muted-foreground/25",
+                ? "border-b-primary md:border-l-primary bg-muted font-medium"
+                : "border-b-transparent md:border-l-transparent hover:border-b-muted-foreground/25 md:hover:border-l-muted-foreground/25",
             )}
             onClick={() => onSectionChange(section.id)}
           >

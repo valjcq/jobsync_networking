@@ -16,6 +16,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "npx playwright test --project=chromium",
+    "test:e2e:mobile": "npx playwright test --project=mobile-390",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "eval:resume-review": "npm --prefix evals run eval:resume-review",

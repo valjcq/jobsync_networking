@@ -168,7 +168,7 @@ function ActivitiesContainer() {
                 </span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[725px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[725px]">
               <DialogHeader>
                 <DialogTitle>Add New Activity</DialogTitle>
                 <DialogDescription>

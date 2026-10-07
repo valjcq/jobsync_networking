@@ -31,7 +31,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: "http://localhost:3737",
+    baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3737",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -41,17 +41,36 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: /mobile-audit/,
       use: { ...devices["Desktop Chrome"] },
     },
 
     {
       name: "firefox",
+      testIgnore: /mobile-audit/,
       use: { ...devices["Desktop Firefox"] },
     },
 
     {
       name: "webkit",
+      testIgnore: /mobile-audit/,
       use: { ...devices["Desktop Safari"] },
+    },
+
+    /* Phone-width audit of every page and popup: npm run test:e2e:mobile.
+       Chromium only; the WebKit/iOS keyboard behaviour needs a real phone. */
+    {
+      name: "mobile-390",
+      testMatch: /mobile-audit/,
+      use: {
+        ...devices["Pixel 5"],
+        viewport: { width: 390, height: 844 },
+        // Escape hatch for machines whose cached Chromium build differs from
+        // the one this Playwright version expects.
+        ...(process.env.E2E_CHROMIUM_PATH
+          ? { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH } }
+          : {}),
+      },
     },
 
     /* Test against mobile viewports. */
@@ -78,7 +97,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: "npm run dev",
-    url: "http://localhost:3737",
+    url: process.env.E2E_BASE_URL ?? "http://localhost:3737",
     reuseExistingServer: true,
     timeout: 120 * 1000,
   },

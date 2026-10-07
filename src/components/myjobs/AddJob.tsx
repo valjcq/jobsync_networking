@@ -276,7 +276,7 @@ export function AddJob({
       )}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogOverlay>
-          <DialogContent className="h-full xl:h-[85vh] lg:h-[95vh] lg:max-w-screen-lg lg:max-h-screen overflow-y-scroll">
+          <DialogContent className="max-sm:h-dvh max-sm:max-h-dvh max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 h-full xl:h-[85vh] lg:h-[95vh] lg:max-w-screen-lg">
             <DialogHeader>
               <DialogTitle data-testid="add-job-dialog-title">
                 {pageTitle}
@@ -667,7 +667,7 @@ export function AddJob({
                   />
                 </div>
                 {editJob && <NotesCollapsibleSection jobId={editJob.id} />}
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 max-sm:sticky max-sm:bottom-[-1rem] max-sm:z-10 max-sm:-mx-4 max-sm:border-t max-sm:bg-background max-sm:px-4 max-sm:py-3">
                   <DialogFooter
                   // className="md:col-span
                   >

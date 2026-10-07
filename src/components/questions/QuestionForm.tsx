@@ -123,7 +123,7 @@ export function QuestionForm({
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogOverlay>
-        <DialogContent className="sm:max-w-[725px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[725px]">
           <DialogHeader>
             <DialogTitle data-testid="question-form-dialog-title">
               {pageTitle}

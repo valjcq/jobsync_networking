@@ -215,7 +215,7 @@ function AddContact({
         </Button>
       )}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{pageTitle}</DialogTitle>
           </DialogHeader>

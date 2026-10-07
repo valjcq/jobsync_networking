@@ -136,7 +136,7 @@ function AddSkills({
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogContent className="max-h-[85vh] md:max-w-[40rem] overflow-y-auto">
+      <DialogContent className="md:max-w-[40rem]">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Skills" : "Add Skills"}</DialogTitle>
           <DialogDescription>

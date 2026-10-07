@@ -115,7 +115,7 @@ function AddContactInfo({
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogContent className="lg:max-h-screen overflow-y-scroll">
+      <DialogContent >
         <DialogHeader>
           <DialogTitle>{pageTitle}</DialogTitle>
           <DialogDescription>{pageDescription}</DialogDescription>

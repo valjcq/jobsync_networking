@@ -58,7 +58,7 @@ export function PdfExportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* A fixed height, not a max: the pane fits pages to its own height, so
           a content-driven one would feed back on itself. */}
-      <DialogContent className="flex h-[90vh] flex-col sm:max-w-5xl">
+      <DialogContent className="flex h-[90dvh] flex-col sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
