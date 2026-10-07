@@ -28,7 +28,44 @@ import {
   McpLogInteractionInputShape,
   McpLogInteractionSchema,
   McpListFollowupsInputShape,
+  McpSearchInputShape,
+  McpSearchSchema,
+  McpAddTodoInputShape,
+  McpAddTodoSchema,
+  McpListTodosInputShape,
+  McpListTodosSchema,
+  McpUpdateTodoInputShape,
+  McpUpdateTodoSchema,
+  McpCompleteTodoInputShape,
+  McpCompleteTodoSchema,
+  McpGetJobInputShape,
+  McpGetJobSchema,
+  McpSetJobStatusInputShape,
+  McpSetJobStatusSchema,
+  McpAddJobNoteInputShape,
+  McpAddJobNoteSchema,
+  McpGetContactInputShape,
+  McpGetContactSchema,
+  McpCompleteFollowupInputShape,
+  McpCompleteFollowupSchema,
 } from "@/models/mcp.schema";
+import type { z } from "zod";
+import { handleSearch } from "@/lib/mcp/tools/search";
+import {
+  handleAddTodo,
+  handleCompleteTodo,
+  handleListTodos,
+  handleUpdateTodo,
+} from "@/lib/mcp/tools/todos";
+import {
+  handleAddJobNote,
+  handleGetJob,
+  handleSetJobStatus,
+} from "@/lib/mcp/tools/jobTools";
+import {
+  handleCompleteFollowup,
+  handleGetContact,
+} from "@/lib/mcp/tools/contactTools";
 import { handleAddJob } from "@/lib/mcp/tools/addJob";
 import { handleAddQuestion } from "@/lib/mcp/tools/addQuestion";
 import { handleSaveMatchResult } from "@/lib/mcp/tools/saveMatchResult";
@@ -363,6 +400,126 @@ async function handler(req: Request): Promise<Response> {
       }
       return handleSaveResumeReview(parsed.data, userId, tokenName);
     },
+  );
+
+  // The scope check + validation every tool repeats, for the tools below. The
+  // older tools above keep their inline copies. Same messages as those.
+  const gate =
+    <S extends z.ZodTypeAny>(
+      scope: string,
+      schema: S,
+      run: (input: z.infer<S>) => Promise<{
+        content: Array<{ type: "text"; text: string }>;
+      }>,
+    ) =>
+    async (rawInput: unknown) => {
+      if (!auth.scopes.includes(scope)) {
+        return {
+          content: [
+            { type: "text" as const, text: `Insufficient scope. Required: ${scope}` },
+          ],
+        };
+      }
+      const parsed = schema.safeParse(rawInput);
+      if (!parsed.success) {
+        const issues = parsed.error.issues.map((i) => i.message).join("; ");
+        return {
+          content: [{ type: "text" as const, text: `Validation error: ${issues}` }],
+        };
+      }
+      return run(parsed.data);
+    };
+
+  // search is readable with whichever of jobs:write / networking:write /
+  // tasks:write the token has; the handler skips the types it cannot read.
+  server.tool(
+    "search",
+    MCP_TOOL_DESCRIPTIONS.search,
+    McpSearchInputShape,
+    async (rawInput) => {
+      if (
+        !["jobs:write", "networking:write", "tasks:write"].some((s) =>
+          auth.scopes.includes(s),
+        )
+      ) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: "Insufficient scope. Required: jobs:write, networking:write or tasks:write",
+            },
+          ],
+        };
+      }
+      const parsed = McpSearchSchema.safeParse(rawInput);
+      if (!parsed.success) {
+        const issues = parsed.error.issues.map((i) => i.message).join("; ");
+        return {
+          content: [{ type: "text" as const, text: `Validation error: ${issues}` }],
+        };
+      }
+      return handleSearch(parsed.data, userId, auth.scopes);
+    },
+  );
+
+  // Todos need their own scope: tokens created before tasks:write existed get a
+  // clear "Insufficient scope" here until a new token is created.
+  server.tool(
+    "add_todo",
+    MCP_TOOL_DESCRIPTIONS.add_todo,
+    McpAddTodoInputShape,
+    gate("tasks:write", McpAddTodoSchema, (i) => handleAddTodo(i, userId, tokenName)),
+  );
+  server.tool(
+    "list_todos",
+    MCP_TOOL_DESCRIPTIONS.list_todos,
+    McpListTodosInputShape,
+    gate("tasks:write", McpListTodosSchema, (i) => handleListTodos(i, userId)),
+  );
+  server.tool(
+    "update_todo",
+    MCP_TOOL_DESCRIPTIONS.update_todo,
+    McpUpdateTodoInputShape,
+    gate("tasks:write", McpUpdateTodoSchema, (i) => handleUpdateTodo(i, userId)),
+  );
+  server.tool(
+    "complete_todo",
+    MCP_TOOL_DESCRIPTIONS.complete_todo,
+    McpCompleteTodoInputShape,
+    gate("tasks:write", McpCompleteTodoSchema, (i) => handleCompleteTodo(i, userId)),
+  );
+
+  server.tool(
+    "get_job",
+    MCP_TOOL_DESCRIPTIONS.get_job,
+    McpGetJobInputShape,
+    gate("jobs:write", McpGetJobSchema, (i) => handleGetJob(i, userId)),
+  );
+  server.tool(
+    "set_job_status",
+    MCP_TOOL_DESCRIPTIONS.set_job_status,
+    McpSetJobStatusInputShape,
+    gate("jobs:write", McpSetJobStatusSchema, (i) => handleSetJobStatus(i, userId)),
+  );
+  server.tool(
+    "add_job_note",
+    MCP_TOOL_DESCRIPTIONS.add_job_note,
+    McpAddJobNoteInputShape,
+    gate("jobs:write", McpAddJobNoteSchema, (i) => handleAddJobNote(i, userId)),
+  );
+  server.tool(
+    "get_contact",
+    MCP_TOOL_DESCRIPTIONS.get_contact,
+    McpGetContactInputShape,
+    gate("networking:write", McpGetContactSchema, (i) => handleGetContact(i, userId)),
+  );
+  server.tool(
+    "complete_followup",
+    MCP_TOOL_DESCRIPTIONS.complete_followup,
+    McpCompleteFollowupInputShape,
+    gate("networking:write", McpCompleteFollowupSchema, (i) =>
+      handleCompleteFollowup(i, userId),
+    ),
   );
 
   const transport = new WebStandardStreamableHTTPServerTransport({

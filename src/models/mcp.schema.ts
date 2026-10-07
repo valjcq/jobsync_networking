@@ -368,3 +368,217 @@ export const McpListFollowupsInputShape = {};
 
 export const McpListFollowupsSchema = z.object(McpListFollowupsInputShape);
 export type McpListFollowupsInput = z.infer<typeof McpListFollowupsSchema>;
+
+// ---------------------------------------------------------------------------
+// Search, todos and the job/contact read + quick-update tools
+// ---------------------------------------------------------------------------
+
+export const MCP_SEARCH_TYPES = [
+  "job",
+  "contact",
+  "company",
+  "interaction",
+  "task",
+] as const;
+
+export const McpSearchInputShape = {
+  query: z
+    .string()
+    .min(1, "query is required")
+    .max(200)
+    .describe(
+      "What to look for: a company, a job title, a person's name, a todo title, a keyword. Case and accents are ignored and small typos are tolerated.",
+    ),
+  types: z
+    .array(z.enum(MCP_SEARCH_TYPES))
+    .min(1)
+    .optional()
+    .describe("Limit the search to these kinds of record. Default: everything the token may read."),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(25)
+    .optional()
+    .describe("Maximum results overall (default and max 25; at most 10 per type)."),
+  includeDescription: z
+    .boolean()
+    .optional()
+    .describe(
+      "Also look inside job descriptions for the exact text (plain letters only, accents are not folded there). Off by default because it can surface many weak matches.",
+    ),
+};
+
+export const McpSearchSchema = z.object(McpSearchInputShape);
+export type McpSearchInput = z.infer<typeof McpSearchSchema>;
+
+const TODO_STATUS_VALUES = [
+  "in-progress",
+  "needs-attention",
+  "complete",
+  "cancelled",
+] as const;
+
+const todoDateDescription = `${dateOnlyDescription} Today or later when creating.`;
+
+export const McpAddTodoInputShape = {
+  title: z
+    .string()
+    .min(2, "title must be at least 2 characters")
+    .max(200, "title must be 200 characters or fewer")
+    .describe("What needs doing, e.g. 'Send thank-you note to Marie'."),
+  description: z
+    .string()
+    .max(2000, "description must be 2000 characters or fewer")
+    .optional()
+    .describe("Plain-text detail. Only facts present in the source."),
+  dueDate: z.string().optional().describe(todoDateDescription),
+  priority: z
+    .number()
+    .int()
+    .min(0)
+    .max(10)
+    .optional()
+    .describe("0 (low) to 10 (high). Default 5."),
+  jobId: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("Id of the saved job this todo is about, from search or find_job."),
+  contactId: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("Id of the saved contact this todo is about, from search or find_contact."),
+  jobQuery: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "A job named instead of its id, accepted only when it matches exactly one saved job without a typo. Otherwise nothing is created and the candidates come back. Prefer jobId.",
+    ),
+  contactName: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "A contact's full name instead of its id, accepted only when it matches exactly one saved contact. Otherwise nothing is created and the candidates come back. Prefer contactId.",
+    ),
+  allowDuplicate: z
+    .boolean()
+    .optional()
+    .describe(
+      "Create the todo even though an open one with the same title and link already exists. Leave unset when retrying.",
+    ),
+};
+
+export const McpAddTodoSchema = z.object(McpAddTodoInputShape);
+export type McpAddTodoInput = z.infer<typeof McpAddTodoSchema>;
+
+export const McpListTodosInputShape = {
+  status: z
+    .enum(["open", "all", ...TODO_STATUS_VALUES])
+    .optional()
+    .describe(
+      "'open' (default) = in-progress + needs-attention. 'all' = every status. Or one exact status.",
+    ),
+  dueBefore: z
+    .string()
+    .optional()
+    .describe(`Only todos due on or before this day (overdue ones included). ${dateOnlyDescription}`),
+  jobId: z.string().min(1).optional().describe("Only todos linked to this job."),
+  contactId: z.string().min(1).optional().describe("Only todos linked to this contact."),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .optional()
+    .describe("Maximum todos to return (default 25, max 50)."),
+};
+
+export const McpListTodosSchema = z.object(McpListTodosInputShape);
+export type McpListTodosInput = z.infer<typeof McpListTodosSchema>;
+
+export const McpUpdateTodoInputShape = {
+  todoId: z.string().min(1).describe("The todo's id, from list_todos, search or add_todo."),
+  title: z.string().min(2).max(200).optional(),
+  description: z
+    .string()
+    .max(2000)
+    .nullable()
+    .optional()
+    .describe("Plain text. Null clears it."),
+  dueDate: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(`${dateOnlyDescription} Null clears it.`),
+  priority: z.number().int().min(0).max(10).optional(),
+  status: z.enum(TODO_STATUS_VALUES).optional(),
+  jobId: z.string().min(1).nullable().optional().describe("Link to this job. Null unlinks."),
+  contactId: z.string().min(1).nullable().optional().describe("Link to this contact. Null unlinks."),
+};
+
+export const McpUpdateTodoSchema = z.object(McpUpdateTodoInputShape);
+export type McpUpdateTodoInput = z.infer<typeof McpUpdateTodoSchema>;
+
+export const McpCompleteTodoInputShape = {
+  todoId: z.string().min(1).describe("The todo's id, from list_todos, search or add_todo."),
+};
+
+export const McpCompleteTodoSchema = z.object(McpCompleteTodoInputShape);
+export type McpCompleteTodoInput = z.infer<typeof McpCompleteTodoSchema>;
+
+export const McpGetJobInputShape = {
+  jobId: z.string().min(1).describe("The job's id, from search, find_job or add_job."),
+};
+
+export const McpGetJobSchema = z.object(McpGetJobInputShape);
+export type McpGetJobInput = z.infer<typeof McpGetJobSchema>;
+
+export const McpSetJobStatusInputShape = {
+  jobId: z.string().min(1).describe("The job's id, from search, find_job or add_job."),
+  status: z
+    .preprocess(
+      (v) => (typeof v === "string" ? v.toLowerCase() : v),
+      z.enum(JOB_STATUS_VALUES),
+    )
+    .describe(`New application status. One of: ${JOB_STATUS_VALUES.join(", ")}.`),
+};
+
+export const McpSetJobStatusSchema = z.object(McpSetJobStatusInputShape);
+export type McpSetJobStatusInput = z.infer<typeof McpSetJobStatusSchema>;
+
+export const McpAddJobNoteInputShape = {
+  jobId: z.string().min(1).describe("The job's id, from search, find_job or add_job."),
+  content: z
+    .string()
+    .min(1, "content is required")
+    .max(5000, "content must be 5000 characters or fewer")
+    .describe("Plain-text note. Only facts present in the source."),
+};
+
+export const McpAddJobNoteSchema = z.object(McpAddJobNoteInputShape);
+export type McpAddJobNoteInput = z.infer<typeof McpAddJobNoteSchema>;
+
+export const McpGetContactInputShape = {
+  contactId: z.string().min(1).describe("The contact's id, from search or find_contact."),
+};
+
+export const McpGetContactSchema = z.object(McpGetContactInputShape);
+export type McpGetContactInput = z.infer<typeof McpGetContactSchema>;
+
+export const McpCompleteFollowupInputShape = {
+  interactionId: z
+    .string()
+    .min(1)
+    .describe("The interaction id shown by list_followups or get_contact."),
+  done: z
+    .boolean()
+    .optional()
+    .describe("true (default) marks the next step done; false reopens it."),
+};
+
+export const McpCompleteFollowupSchema = z.object(McpCompleteFollowupInputShape);
+export type McpCompleteFollowupInput = z.infer<typeof McpCompleteFollowupSchema>;

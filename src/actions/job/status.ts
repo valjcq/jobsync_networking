@@ -4,6 +4,7 @@ import { handleError } from "@/lib/utils";
 import { JobStatus } from "@/models/job.model";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "../shared";
+import { setJobStatusForUser } from "@/lib/jobs/status";
 
 export const updateJobStatus = async (
   jobId: string,
@@ -11,33 +12,7 @@ export const updateJobStatus = async (
 ): Promise<any | undefined> => {
   try {
     const user = await requireUser();
-    const dataToUpdate = () => {
-      switch (status.value) {
-        case "applied":
-          return {
-            statusId: status.id,
-            applied: true,
-            appliedDate: new Date(),
-          };
-        case "interview":
-          return {
-            statusId: status.id,
-            applied: true,
-          };
-        default:
-          return {
-            statusId: status.id,
-          };
-      }
-    };
-
-    const job = await prisma.job.update({
-      where: {
-        id: jobId,
-        userId: user.id,
-      },
-      data: dataToUpdate(),
-    });
+    const job = await setJobStatusForUser(user.id, jobId, status);
     revalidatePath("/dashboard");
     return { job, success: true };
   } catch (error) {

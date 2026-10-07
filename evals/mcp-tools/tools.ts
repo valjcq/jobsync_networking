@@ -10,6 +10,14 @@ import {
   McpSaveMatchResultsBatchInputShape,
   McpReviewResumeInputShape,
   McpSaveResumeReviewInputShape,
+  McpSearchInputShape,
+  McpAddTodoInputShape,
+  McpListTodosInputShape,
+  McpUpdateTodoInputShape,
+  McpCompleteTodoInputShape,
+  McpGetJobInputShape,
+  McpSetJobStatusInputShape,
+  McpAddJobNoteInputShape,
 } from '../../src/models/mcp.schema';
 
 // Same raw shapes route.ts hands the MCP SDK, so the model sees the parameter
@@ -25,6 +33,14 @@ const SHAPES: Record<string, z.ZodRawShape> = {
   save_match_results_batch: McpSaveMatchResultsBatchInputShape,
   review_resume: McpReviewResumeInputShape,
   save_resume_review: McpSaveResumeReviewInputShape,
+  search: McpSearchInputShape,
+  add_todo: McpAddTodoInputShape,
+  list_todos: McpListTodosInputShape,
+  update_todo: McpUpdateTodoInputShape,
+  complete_todo: McpCompleteTodoInputShape,
+  get_job: McpGetJobInputShape,
+  set_job_status: McpSetJobStatusInputShape,
+  add_job_note: McpAddJobNoteInputShape,
 };
 
 export function getTools() {

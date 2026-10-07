@@ -178,3 +178,11 @@ export function assertRoutesToReviewResume(output: unknown): AssertionResult {
   const { pass, score, reason } = expectSingle(output, 'review_resume');
   return { pass, score, reason };
 }
+
+// A record named in words, with no id to hand: look it up first. Writing in
+// the same turn means the id was guessed or the name was passed unresolved.
+export function assertSearchesBeforeWriting(output: unknown): AssertionResult {
+  const writes = expectNone(output, ['add_todo', 'set_job_status', 'add_job_note', 'update_todo', 'add_job']);
+  if (!writes.pass) return writes;
+  return expectAnyOf(output, ['search']);
+}
