@@ -15,11 +15,16 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { SigninFormSchema } from "@/models/signinForm.schema";
 import Loading from "../Loading";
 import { Eye, EyeOff } from "lucide-react";
 
-function SigninForm() {
+function SigninForm({
+  canResetPassword = false,
+}: {
+  canResetPassword?: boolean;
+}) {
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof SigninFormSchema>>({
@@ -86,7 +91,17 @@ function SigninForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="password">Password</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel htmlFor="password">Password</FormLabel>
+                      {canResetPassword && (
+                        <Link
+                          href="/forgot-password"
+                          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+                        >
+                          Forgot password?
+                        </Link>
+                      )}
+                    </div>
                     <FormControl>
                       <div className="relative">
                         <Input

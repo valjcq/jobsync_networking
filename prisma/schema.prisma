@@ -38,6 +38,7 @@ model User {
   Tag            Tag[]
   Question       Question[]
   McpAccessToken McpAccessToken[]
+  PasswordResetToken PasswordResetToken[]
   ChatConversation ChatConversation?
   defaultResumeId String?
   defaultResume   Resume?          @relation("UserDefaultResume", fields: [defaultResumeId], references: [id], onDelete: SetNull)
@@ -613,6 +614,20 @@ model Question {
   createdVia String? // MCP provenance: which agent/token created this, mirrors Job.createdVia
 
   @@index([createdBy])
+}
+
+// One-time password reset links. Only the SHA-256 of the token is stored, so a
+// leaked database cannot be used to reset anyone's password.
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model McpAccessToken {

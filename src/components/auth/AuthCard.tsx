@@ -8,9 +8,13 @@ type AuthMode = "signin" | "signup";
 
 interface AuthCardProps {
   mode: AuthMode;
+  canResetPassword?: boolean;
 }
 
-export default function AuthCard({ mode }: AuthCardProps) {
+export default function AuthCard({
+  mode,
+  canResetPassword = false,
+}: AuthCardProps) {
   const router = useRouter();
 
   return (
@@ -57,7 +61,7 @@ export default function AuthCard({ mode }: AuthCardProps) {
                 Enter your credentials to access your account
               </p>
             </div>
-            <SigninForm />
+            <SigninForm canResetPassword={canResetPassword} />
           </>
         ) : (
           <>
