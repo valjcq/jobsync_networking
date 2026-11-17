@@ -13,7 +13,7 @@ stale_after: 2027-10-07
 
 ## What do the job and resume tools do?
 
-Twenty-three tools in all, every one acting on your own data. The networking and todo tools need a scope an older token may lack; see [Insufficient scope](./mcp.md#why-do-the-networking-or-todo-tools-say-insufficient-scope).
+Thirty-six tools in all (thirteen of them on [the contact and profile page](./mcp-contact-tools.md)), every one acting on your own data. The networking and todo tools need a scope an older token may lack; see [Insufficient scope](./mcp.md#why-do-the-networking-or-todo-tools-say-insufficient-scope).
 
 - **add_job** — adds a job, resolving or creating company, title, location, source and tags by name, and reporting back what it matched versus created.
 - **add_jobs_batch** — the same thing for up to 10 jobs in one call, for a scheduled run.
@@ -42,6 +42,8 @@ The networking tools work on your [Contacts](./contacts.md) and [Networking](./n
 - **list_followups** — lists the next steps that are due today or earlier, oldest first. It only reads.
 - **get_contact** — reads one contact in full: details, linked jobs, recent interactions and their next steps, and open todos.
 - **complete_followup** — marks an interaction's next step done, or reopens it. It does not create the next one; the agent uses a todo for that.
+
+There are more networking tools for correcting, merging, listing, bulk-adding and linking contacts and interactions, and for your own profile; they are on [MCP Contact and Profile Tools](./mcp-contact-tools.md).
 
 ## What do the todo tools do?
 

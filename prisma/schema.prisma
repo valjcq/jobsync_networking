@@ -76,6 +76,9 @@ model Profile {
   user         User          @relation(fields: [userId], references: [id])
   resumes      Resume[]
   coverLetters CoverLetter[]
+  // JSON arrays of strings, edited through the MCP profile tools
+  targetRoles     String?
+  targetLocations String?
 }
 
 model Resume {
@@ -238,6 +241,9 @@ model Contact {
 
   notes             String?
   lastContactedAt   DateTime?
+  // Outreach wave state (drafted, sent, replied, meeting_scheduled, no_reply).
+  // Free text in the column; the allowed values live in lib/networking/contactStatus.
+  status            String?
 
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
@@ -252,6 +258,7 @@ model Contact {
   tasks             Task[]
 
   @@index([createdBy])
+  @@index([createdBy, status])
   @@index([companyId])
   @@index([workedAtCompanyId])
   @@index([roleId])

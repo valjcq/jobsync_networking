@@ -7,12 +7,12 @@
   <a href="#quick-start">Quick Start</a> ·
   <a href="#ai-assistant-in-app-chat">AI Assistant</a> ·
   <a href="#mcp-server-ai-agent-integration">MCP Setup</a> ·
-  <a href="https://github.com/Gsync/jobsync/wiki">Help</a>
+  <a href="https://github.com/valjcq/jobsync_networking/wiki">Help</a>
 </p>
 
 <p align="center">
-  <a href="./LICENSE"><img src="https://img.shields.io/github/license/Gsync/jobsync" alt="License"></a>
-  <a href="https://github.com/Gsync/jobsync/stargazers"><img src="https://img.shields.io/github/stars/Gsync/jobsync?style=social" alt="GitHub Stars"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/valjcq/jobsync_networking" alt="License"></a>
+  <a href="https://github.com/valjcq/jobsync_networking/stargazers"><img src="https://img.shields.io/github/stars/valjcq/jobsync_networking?style=social" alt="GitHub Stars"></a>
   <img src="https://img.shields.io/badge/self--hosted-Docker-blue" alt="Self-hosted with Docker">
 </p>
 
@@ -50,8 +50,8 @@ JobSync is a free, open-source companion for your job search: track applications
 Make sure [Docker](https://www.docker.com) is installed and running, then:
 
 ```sh
-git clone https://github.com/Gsync/jobsync.git
-cd jobsync
+git clone https://github.com/valjcq/jobsync_networking.git
+cd jobsync_networking
 docker compose up
 ```
 
@@ -78,7 +78,7 @@ Environment variables can be set in `docker-compose.yml`:
 From the project directory, run the deploy script to pull the latest changes and rebuild:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Gsync/jobsync/main/deploy.sh | sudo bash -s
+curl -fsSL https://raw.githubusercontent.com/valjcq/jobsync_networking/main/deploy.sh | sudo bash -s
 ```
 
 On **Windows**, run the PowerShell equivalent from the project directory instead (`deploy.sh` needs WSL or Git Bash; `deploy.ps1` runs natively):
@@ -142,6 +142,7 @@ Browsing a job posting or reading an interview question elsewhere and don't want
 
 - *"Add this job to JobSync (copy/paste the complete job details or try providing a link): Senior Backend Engineer at Acme Corp, JobType, location, Job description... "*
 - *"I just got asked this in an interview — add it to my Question Bank: 'How would you design a rate limiter?' with my answer: ..."*
+- *"Add these ten people from my outreach list, mark them as drafted, and link the recruiter to the Acme job."* — see the [MCP Tools wiki page](./wiki/mcp-contact-tools.md) for the full list of 36 tools (contact and interaction editing, merging, listing and filtering, batches, and your own profile).
 
 The agent resolves or creates the company, title, location, and tags by name, and reports back what it matched versus created — so your data stays de-duplicated without you having to switch to the app.
 
@@ -207,7 +208,7 @@ Clients that support `streamable-http` natively can connect directly without `mc
 
 ## Help
 
-In-app usage guides — getting started, jobs, automations, and MCP access — live in the [GitHub Wiki](https://github.com/Gsync/jobsync/wiki).
+In-app usage guides — getting started, jobs, automations, and MCP access — live in the [GitHub Wiki](https://github.com/valjcq/jobsync_networking/wiki).
 
 ## Contributing
 

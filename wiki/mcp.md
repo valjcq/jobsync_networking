@@ -71,11 +71,12 @@ Both snippets are shown in the token dialog with your real URL and token already
 
 ## Which tools does a connected agent get?
 
-Twenty-three, all of them acting on your own data. They fall into five groups, described one by one on [MCP Tools](./mcp-tools.md):
+Thirty-six, all of them acting on your own data. They fall into six groups, described one by one on [MCP Tools](./mcp-tools.md) and [MCP Contact and Profile Tools](./mcp-contact-tools.md):
 
 - **Jobs** — add, batch-add, find by URL, correct, and (for any job) read in full, change the status, add a note.
 - **Search** — find jobs, contacts, companies, interactions and todos by name, so the agent never needs a link or an id from you.
-- **Networking** — find, add and read contacts, log interactions, list and tick off follow-ups.
+- **Networking** — find, list, add, correct, merge and delete contacts (including in batches and with an outreach status), link them to jobs, add notes, log, list, correct and delete interactions, list and tick off follow-ups.
+- **Profile** — read and edit your own name, headline, summary, target roles and locations, and links.
 - **Todos** — add, list, update and complete the to-dos on your Tasks page.
 - **Resume and questions** — add Question Bank entries, review your default resume, store job-fit analyses.
 
@@ -85,7 +86,7 @@ Tokens are issued with the scopes needed for all of these, so there is nothing t
 
 ## Why do the networking or todo tools say "Insufficient scope"?
 
-The networking tools need the **networking:write** scope, which applies to all of them, including the read-only ones. The todo tools need **tasks:write**. Tokens generated before those tools were added do not have the scope, and a scope cannot be added to an existing token. The other tools keep working with such a token, but a networking call fails with "Insufficient scope. Required: networking:write", and a todo call with "Insufficient scope. Required: tasks:write". **search** works with any one of jobs, networking or tasks scopes and simply skips the kinds the token cannot read.
+The networking tools need the **networking:write** scope, which applies to all of them, including the read-only ones. The todo tools need **tasks:write**, and the profile tools need **resume:write**. Tokens generated before those tools were added do not have the scope, and a scope cannot be added to an existing token. The other tools keep working with such a token, but a networking call fails with "Insufficient scope. Required: networking:write", and a todo call with "Insufficient scope. Required: tasks:write", and a profile call with "Insufficient scope. Required: resume:write". **search** works with any one of jobs, networking or tasks scopes and simply skips the kinds the token cannot read.
 
 The **Scopes** column on **Settings → MCP Access** shows what each token holds. To fix an older token, generate a new one, put it in your client, then revoke the old one (see [below](#how-do-i-revoke-a-token-or-see-which-agent-added-a-job)). Use the same name so the source on new jobs stays the same. Revoking does not delete anything the old token created.
 
@@ -119,7 +120,7 @@ Work through these in order. Check that the endpoint URL in your config matches 
 
 If the connection works but calls start failing, you may have hit the rate limit: 60 MCP requests per hour across all tools and all your tokens. A batch call spends one request per item, and adding a job then saving its match spends two.
 
-If you self-host with `NODE_ENV=production`, the MCP server is off unless the environment variable `MCP_ENABLED` is set to `true`. That and every other setting are covered in the [project README](https://github.com/Gsync/jobsync#readme).
+If you self-host with `NODE_ENV=production`, the MCP server is off unless the environment variable `MCP_ENABLED` is set to `true`. That and every other setting are covered in the [project README](https://github.com/valjcq/jobsync_networking#readme).
 
 ## How do I revoke a token or see which agent added a job?
 

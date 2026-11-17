@@ -55,6 +55,19 @@ describe("handleAddContact", () => {
     expect(db.contact.create).not.toHaveBeenCalled();
   });
 
+  it("stores a valid outreach status, folding case and separators", async () => {
+    await handleAddContact({ name: "Sam Lee", status: "Meeting Scheduled" }, "user-1");
+    expect(db.contact.create.mock.calls[0][0].data.status).toBe("meeting_scheduled");
+  });
+
+  it("rejects an unknown status before anything is written", async () => {
+    const res = await handleAddContact({ name: "Sam Lee", status: "ghosted" }, "user-1");
+    expect(res.content[0].text).toBe(
+      "Validation error: status must be one of: drafted, sent, replied, meeting_scheduled, no_reply",
+    );
+    expect(db.contact.create).not.toHaveBeenCalled();
+  });
+
   it("creates a contact owned by the token's user", async () => {
     const res = await handleAddContact({ name: "  Sam Lee " }, "user-1");
     const data = db.contact.create.mock.calls[0][0].data;

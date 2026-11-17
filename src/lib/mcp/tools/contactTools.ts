@@ -24,6 +24,7 @@ export async function handleGetContact(
         phone: true,
         linkedinUrl: true,
         relationship: true,
+        status: true,
         notes: true,
         lastContactedAt: true,
         Company: { select: { label: true } },
@@ -71,6 +72,7 @@ export async function handleGetContact(
       contact.linkedinUrl ? `LinkedIn: ${contact.linkedinUrl}` : null,
       contact.Location ? `location: ${contact.Location.label}` : null,
       contact.relationship ? `relationship: ${contact.relationship}` : null,
+      contact.status ? `status: ${contact.status}` : null,
       `last contacted: ${contact.lastContactedAt ? formatDateOnly(contact.lastContactedAt) : "never"}`,
     ].filter(Boolean);
     lines.push(facts.join("; "));

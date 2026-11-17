@@ -48,6 +48,32 @@ import {
   McpGetContactSchema,
   McpCompleteFollowupInputShape,
   McpCompleteFollowupSchema,
+  McpUpdateContactInputShape,
+  McpUpdateContactSchema,
+  McpDeleteContactInputShape,
+  McpDeleteContactSchema,
+  McpMergeContactsInputShape,
+  McpMergeContactsSchema,
+  McpAddContactNoteInputShape,
+  McpAddContactNoteSchema,
+  McpLinkContactToJobInputShape,
+  McpLinkContactToJobSchema,
+  McpListContactsInputShape,
+  McpListContactsSchema,
+  McpListInteractionsInputShape,
+  McpListInteractionsSchema,
+  McpUpdateInteractionInputShape,
+  McpUpdateInteractionSchema,
+  McpDeleteInteractionInputShape,
+  McpDeleteInteractionSchema,
+  McpAddContactsBatchInputShape,
+  McpAddContactsBatchSchema,
+  McpLogInteractionsBatchInputShape,
+  McpLogInteractionsBatchSchema,
+  McpGetProfileInputShape,
+  McpGetProfileSchema,
+  McpUpdateProfileInputShape,
+  McpUpdateProfileSchema,
 } from "@/models/mcp.schema";
 import type { z } from "zod";
 import { handleSearch } from "@/lib/mcp/tools/search";
@@ -66,6 +92,24 @@ import {
   handleCompleteFollowup,
   handleGetContact,
 } from "@/lib/mcp/tools/contactTools";
+import {
+  handleAddContactNote,
+  handleDeleteContact,
+  handleLinkContactToJob,
+  handleMergeContacts,
+  handleUpdateContact,
+} from "@/lib/mcp/tools/contactEdit";
+import {
+  handleDeleteInteraction,
+  handleListInteractions,
+  handleUpdateInteraction,
+} from "@/lib/mcp/tools/interactionTools";
+import { handleListContacts } from "@/lib/mcp/tools/listContacts";
+import {
+  handleAddContactsBatch,
+  handleLogInteractionsBatch,
+} from "@/lib/mcp/tools/networkingBatches";
+import { handleGetProfile, handleUpdateProfile } from "@/lib/mcp/tools/profileTools";
 import { handleAddJob } from "@/lib/mcp/tools/addJob";
 import { handleAddQuestion } from "@/lib/mcp/tools/addQuestion";
 import { handleSaveMatchResult } from "@/lib/mcp/tools/saveMatchResult";
@@ -520,6 +564,90 @@ async function handler(req: Request): Promise<Response> {
     gate("networking:write", McpCompleteFollowupSchema, (i) =>
       handleCompleteFollowup(i, userId),
     ),
+  );
+
+  // Contact and interaction editing, listing, batches and linking. Same
+  // networking:write scope as the networking tools above.
+  server.tool(
+    "update_contact",
+    MCP_TOOL_DESCRIPTIONS.update_contact,
+    McpUpdateContactInputShape,
+    gate("networking:write", McpUpdateContactSchema, (i) => handleUpdateContact(i, userId)),
+  );
+  server.tool(
+    "delete_contact",
+    MCP_TOOL_DESCRIPTIONS.delete_contact,
+    McpDeleteContactInputShape,
+    gate("networking:write", McpDeleteContactSchema, (i) => handleDeleteContact(i, userId)),
+  );
+  server.tool(
+    "merge_contacts",
+    MCP_TOOL_DESCRIPTIONS.merge_contacts,
+    McpMergeContactsInputShape,
+    gate("networking:write", McpMergeContactsSchema, (i) => handleMergeContacts(i, userId)),
+  );
+  server.tool(
+    "add_contact_note",
+    MCP_TOOL_DESCRIPTIONS.add_contact_note,
+    McpAddContactNoteInputShape,
+    gate("networking:write", McpAddContactNoteSchema, (i) => handleAddContactNote(i, userId)),
+  );
+  server.tool(
+    "link_contact_to_job",
+    MCP_TOOL_DESCRIPTIONS.link_contact_to_job,
+    McpLinkContactToJobInputShape,
+    gate("networking:write", McpLinkContactToJobSchema, (i) => handleLinkContactToJob(i, userId)),
+  );
+  server.tool(
+    "list_contacts",
+    MCP_TOOL_DESCRIPTIONS.list_contacts,
+    McpListContactsInputShape,
+    gate("networking:write", McpListContactsSchema, (i) => handleListContacts(i, userId)),
+  );
+  server.tool(
+    "list_interactions",
+    MCP_TOOL_DESCRIPTIONS.list_interactions,
+    McpListInteractionsInputShape,
+    gate("networking:write", McpListInteractionsSchema, (i) => handleListInteractions(i, userId)),
+  );
+  server.tool(
+    "update_interaction",
+    MCP_TOOL_DESCRIPTIONS.update_interaction,
+    McpUpdateInteractionInputShape,
+    gate("networking:write", McpUpdateInteractionSchema, (i) => handleUpdateInteraction(i, userId)),
+  );
+  server.tool(
+    "delete_interaction",
+    MCP_TOOL_DESCRIPTIONS.delete_interaction,
+    McpDeleteInteractionInputShape,
+    gate("networking:write", McpDeleteInteractionSchema, (i) => handleDeleteInteraction(i, userId)),
+  );
+  server.tool(
+    "add_contacts_batch",
+    MCP_TOOL_DESCRIPTIONS.add_contacts_batch,
+    McpAddContactsBatchInputShape,
+    gate("networking:write", McpAddContactsBatchSchema, (i) => handleAddContactsBatch(i, userId)),
+  );
+  server.tool(
+    "log_interactions_batch",
+    MCP_TOOL_DESCRIPTIONS.log_interactions_batch,
+    McpLogInteractionsBatchInputShape,
+    gate("networking:write", McpLogInteractionsBatchSchema, (i) => handleLogInteractionsBatch(i, userId)),
+  );
+
+  // The user's own profile: gated on resume:write, the scope for resume data
+  // (tokens created before it existed get a clear "Insufficient scope").
+  server.tool(
+    "get_profile",
+    MCP_TOOL_DESCRIPTIONS.get_profile,
+    McpGetProfileInputShape,
+    gate("resume:write", McpGetProfileSchema, () => handleGetProfile(userId)),
+  );
+  server.tool(
+    "update_profile",
+    MCP_TOOL_DESCRIPTIONS.update_profile,
+    McpUpdateProfileInputShape,
+    gate("resume:write", McpUpdateProfileSchema, (i) => handleUpdateProfile(i, userId)),
   );
 
   const transport = new WebStandardStreamableHTTPServerTransport({

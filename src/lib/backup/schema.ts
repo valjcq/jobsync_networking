@@ -56,7 +56,12 @@ const ActivityType = z.object({
   updatedAt: dt,
 });
 
-const Profile = z.object({ id });
+const Profile = z.object({
+  id,
+  // Optional: backups taken before the MCP profile tools lack them.
+  targetRoles: optStr.optional(),
+  targetLocations: optStr.optional(),
+});
 
 // fileMissing marks a row whose bytes were absent on disk at export time.
 const File = z.object({
@@ -246,6 +251,7 @@ const Contact = z.object({
   roleId: optId.optional(),
   notes: optStr.optional(),
   lastContactedAt: optDt.optional(),
+  status: optStr.optional(),
   updatedAt: dt.optional(),
 });
 

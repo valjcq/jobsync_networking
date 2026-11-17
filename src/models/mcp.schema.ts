@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { APP_CONSTANTS, JOB_STATUS_VALUES } from "@/lib/constants";
 import { WORKPLACE_TYPES, matchEnumEntry } from "@/models/job.model";
+import { CONTACT_STATUSES, matchContactStatus } from "@/lib/networking/contactStatus";
 
 // An enum rather than a described string, for the same reason status is one:
 // a small local model fills an enum-constrained slot and ignores prose hints.
@@ -245,6 +246,18 @@ export type McpSaveMatchResultsBatchInput = z.infer<
 // the Contacts and Interaction forms.
 const dateOnlyDescription = "YYYY-MM-DD (a calendar date, no time or timezone), e.g. '2026-09-20'.";
 
+// Same spelling the user types in prose ("meeting scheduled") still validates:
+// the handler folds case and separators, the enum list stays in the JSON schema.
+const contactStatusDescription = `Outreach status. One of: ${CONTACT_STATUSES.join(", ")}.`;
+const contactStatusField = z
+  .preprocess(
+    (v) => (typeof v === "string" ? (matchContactStatus(v) ?? v) : v),
+    z.enum(CONTACT_STATUSES),
+  )
+  .optional()
+  .describe(contactStatusDescription);
+
+
 export const McpFindContactInputShape = {
   query: z
     .string()
@@ -295,6 +308,7 @@ export const McpAddContactInputShape = {
     .optional()
     .describe("What this person is to the user, e.g. 'Recruiter', 'Referrer'. Matched to an existing role by name, or created."),
   notes: z.string().max(2000).optional().describe("Free-form notes. Only facts present in the source."),
+  status: contactStatusField,
   lastContactedAt: z
     .string()
     .optional()
@@ -582,3 +596,194 @@ export const McpCompleteFollowupInputShape = {
 
 export const McpCompleteFollowupSchema = z.object(McpCompleteFollowupInputShape);
 export type McpCompleteFollowupInput = z.infer<typeof McpCompleteFollowupSchema>;
+
+// ---------------------------------------------------------------------------
+// Contact / interaction editing, listing, batches, linking and profile
+// ---------------------------------------------------------------------------
+
+// For updates, an omitted field is left alone and null clears it.
+const clearable = <T extends z.ZodTypeAny>(schema: T, description: string) =>
+  schema.nullable().optional().describe(`${description} Omit to keep the current value; null clears it.`);
+
+export const McpUpdateContactInputShape = {
+  contactId: z.string().min(1).describe("The contact's id, from search, find_contact or list_contacts."),
+  name: z.string().min(1, "name must not be empty").max(120, "name must be 120 characters or fewer").optional().describe("Corrected full name. Cannot be cleared."),
+  title: clearable(z.string().max(120), "Job title."),
+  email: clearable(z.string(), "Email address."),
+  phone: clearable(z.string().max(40), "Phone number."),
+  linkedinUrl: clearable(z.string(), "Full LinkedIn profile URL starting with https://."),
+  company: clearable(z.string(), "Where they work now. Matched to an existing company by name, or created."),
+  location: clearable(z.string(), "City or region. Matched to an existing location by name, or created."),
+  role: clearable(z.string(), "What this person is to the user, e.g. 'Recruiter'. Matched to an existing role by name, or created."),
+  relationship: clearable(z.string().max(120), "How the user knows them."),
+  notes: clearable(z.string().max(2000), "Replaces ALL notes. To add to them, use add_contact_note instead."),
+  lastContactedAt: clearable(z.string(), `Date the user last spoke to them. ${dateOnlyDescription} Not in the future.`),
+  status: z
+    .preprocess(
+      (v) => (typeof v === "string" ? (matchContactStatus(v) ?? v) : v),
+      z.enum(CONTACT_STATUSES).nullable(),
+    )
+    .optional()
+    .describe(`${contactStatusDescription} Omit to keep the current value; null clears it.`),
+  allowDuplicate: z
+    .boolean()
+    .optional()
+    .describe(
+      "Save a new name, email or LinkedIn URL even though another contact already has it. Set only after the user confirms they are different people; otherwise use merge_contacts.",
+    ),
+};
+export const McpUpdateContactSchema = z.object(McpUpdateContactInputShape);
+export type McpUpdateContactInput = z.infer<typeof McpUpdateContactSchema>;
+
+export const McpDeleteContactInputShape = {
+  contactId: z.string().min(1).describe("The contact's id, from search, find_contact or list_contacts."),
+  confirm: z
+    .boolean()
+    .optional()
+    .describe("Must be true to delete. Leave unset first to see what would be removed, then set it only after the user agrees."),
+};
+export const McpDeleteContactSchema = z.object(McpDeleteContactInputShape);
+export type McpDeleteContactInput = z.infer<typeof McpDeleteContactSchema>;
+
+export const McpMergeContactsInputShape = {
+  keepContactId: z.string().min(1).describe("The contact to keep. Its own values win wherever both contacts have one."),
+  mergeContactId: z.string().min(1).describe("The duplicate to fold into the kept contact and then delete."),
+  confirm: z
+    .boolean()
+    .optional()
+    .describe("Must be true to merge. Leave unset first to preview, then set it only after the user agrees."),
+};
+export const McpMergeContactsSchema = z.object(McpMergeContactsInputShape);
+export type McpMergeContactsInput = z.infer<typeof McpMergeContactsSchema>;
+
+export const McpAddContactNoteInputShape = {
+  contactId: z.string().min(1).describe("The contact's id, from search, find_contact or list_contacts."),
+  content: z
+    .string()
+    .min(1, "content is required")
+    .max(1000, "content must be 1000 characters or fewer")
+    .describe("Plain-text note. Only facts present in the source."),
+};
+export const McpAddContactNoteSchema = z.object(McpAddContactNoteInputShape);
+export type McpAddContactNoteInput = z.infer<typeof McpAddContactNoteSchema>;
+
+export const McpLinkContactToJobInputShape = {
+  contactId: z.string().min(1).describe("The contact's id, from search, find_contact or add_contact."),
+  jobId: z.string().min(1).describe("The job's id, from search, find_job or add_job."),
+  role: z
+    .string()
+    .optional()
+    .describe(
+      "What this person is for this job, e.g. 'Recruiter', 'Referrer', 'Hiring Manager'. Matched to an existing role by name, or created. Defaults to the contact's own role when it has one.",
+    ),
+};
+export const McpLinkContactToJobSchema = z.object(McpLinkContactToJobInputShape);
+export type McpLinkContactToJobInput = z.infer<typeof McpLinkContactToJobSchema>;
+
+export const McpListContactsInputShape = {
+  company: z.string().optional().describe("Only contacts whose company name contains this text (case and accents ignored)."),
+  role: z.string().optional().describe("Only contacts whose role (e.g. 'Recruiter') contains this text."),
+  status: contactStatusField,
+  lastContactedBefore: z
+    .string()
+    .optional()
+    .describe(`Only contacts last contacted before this day, never-contacted ones excluded. ${dateOnlyDescription}`),
+  lastContactedAfter: z
+    .string()
+    .optional()
+    .describe(`Only contacts last contacted on or after this day. ${dateOnlyDescription}`),
+  neverContacted: z.boolean().optional().describe("true: only contacts with no last-contacted date."),
+  nextStepDue: z
+    .boolean()
+    .optional()
+    .describe("true: only contacts with an open next step due today or earlier. false: only those without."),
+  limit: z.number().int().min(1).max(100).optional().describe("Maximum contacts to return (default 25, max 100)."),
+};
+export const McpListContactsSchema = z.object(McpListContactsInputShape);
+export type McpListContactsInput = z.infer<typeof McpListContactsSchema>;
+
+export const McpListInteractionsInputShape = {
+  contactId: z.string().min(1).optional().describe("Only interactions with this contact, from find_contact or list_contacts."),
+  purpose: z.string().optional().describe("Only interactions with this purpose, e.g. 'Coffee Chat' (case-insensitive, exact label)."),
+  occurredAfter: z.string().optional().describe(`First day to include. ${dateOnlyDescription}`),
+  occurredBefore: z.string().optional().describe(`Last day to include. ${dateOnlyDescription}`),
+  openNextStepOnly: z.boolean().optional().describe("true: only interactions whose next step is not done yet."),
+  limit: z.number().int().min(1).max(100).optional().describe("Maximum interactions to return (default 25, max 100), newest first."),
+};
+export const McpListInteractionsSchema = z.object(McpListInteractionsInputShape);
+export type McpListInteractionsInput = z.infer<typeof McpListInteractionsSchema>;
+
+export const McpUpdateInteractionInputShape = {
+  interactionId: z.string().min(1).describe("The interaction's id, from list_interactions, get_contact or log_interaction."),
+  contactId: z.string().min(1).optional().describe("Move the interaction to a different contact."),
+  purpose: z.string().min(1).optional().describe("Corrected purpose. Matched to the user's list (case-insensitive); created if missing."),
+  occurredAt: z.string().optional().describe(`Corrected day. ${dateOnlyDescription}`),
+  outcome: clearable(z.string().max(2000), "What was said or decided."),
+  nextStep: clearable(z.string().max(500), "Follow-up action. Clearing it also clears nextStepDate."),
+  nextStepDate: clearable(z.string(), `When the next step is due. ${dateOnlyDescription}`),
+  jobId: clearable(z.string().min(1), "Id of the related saved job. null unlinks."),
+  allowDuplicate: z
+    .boolean()
+    .optional()
+    .describe("Save the edit even though another interaction with the same contact, date, purpose and outcome exists."),
+};
+export const McpUpdateInteractionSchema = z.object(McpUpdateInteractionInputShape);
+export type McpUpdateInteractionInput = z.infer<typeof McpUpdateInteractionSchema>;
+
+export const McpDeleteInteractionInputShape = {
+  interactionId: z.string().min(1).describe("The interaction's id, from list_interactions or get_contact."),
+};
+export const McpDeleteInteractionSchema = z.object(McpDeleteInteractionInputShape);
+export type McpDeleteInteractionInput = z.infer<typeof McpDeleteInteractionSchema>;
+
+export const McpAddContactsBatchInputShape = {
+  contacts: z
+    .array(z.object(McpAddContactInputShape))
+    .min(1)
+    .max(APP_CONSTANTS.MCP_BATCH_MAX_ITEMS)
+    .describe(
+      `Up to ${APP_CONSTANTS.MCP_BATCH_MAX_ITEMS} contacts, each with the same fields as add_contact. Processed in order; each item consumes one unit of the MCP rate-limit budget.`,
+    ),
+};
+export const McpAddContactsBatchSchema = z.object({
+  contacts: z.array(z.object(McpAddContactInputShape)).min(1).max(APP_CONSTANTS.MCP_BATCH_MAX_ITEMS),
+});
+export type McpAddContactsBatchInput = z.infer<typeof McpAddContactsBatchSchema>;
+
+export const McpLogInteractionsBatchInputShape = {
+  interactions: z
+    .array(z.object(McpLogInteractionInputShape))
+    .min(1)
+    .max(APP_CONSTANTS.MCP_BATCH_MAX_ITEMS)
+    .describe(
+      `Up to ${APP_CONSTANTS.MCP_BATCH_MAX_ITEMS} interactions, each with the same fields as log_interaction. Processed in order; each item consumes one unit of the MCP rate-limit budget.`,
+    ),
+};
+export const McpLogInteractionsBatchSchema = z.object({
+  interactions: z.array(z.object(McpLogInteractionInputShape)).min(1).max(APP_CONSTANTS.MCP_BATCH_MAX_ITEMS),
+});
+export type McpLogInteractionsBatchInput = z.infer<typeof McpLogInteractionsBatchSchema>;
+
+export const McpGetProfileInputShape = {};
+export const McpGetProfileSchema = z.object(McpGetProfileInputShape);
+
+export const McpUpdateProfileInputShape = {
+  firstName: z.string().min(1).max(120).optional().describe("The user's first name."),
+  lastName: z.string().min(1).max(120).optional().describe("The user's last name."),
+  headline: z.string().min(1).max(200).optional().describe("One-line professional headline, e.g. 'Senior data engineer'."),
+  summary: z.string().max(5000).optional().describe("Professional summary paragraph. Replaces the current one; an empty string clears it."),
+  targetRoles: z.array(z.string().min(1).max(120)).max(30).optional().describe("Roles the user is looking for. Replaces the whole list; [] clears it."),
+  targetLocations: z.array(z.string().min(1).max(120)).max(30).optional().describe("Places the user wants to work. Replaces the whole list; [] clears it."),
+  links: z
+    .array(
+      z.object({
+        label: z.string().max(60).optional().describe("Short name, e.g. 'Website', 'GitHub'."),
+        url: z.string().min(1).describe("Full URL starting with https://."),
+      }),
+    )
+    .max(2)
+    .optional()
+    .describe("Up to two profile links (website, LinkedIn…). Replaces both slots; [] clears them."),
+};
+export const McpUpdateProfileSchema = z.object(McpUpdateProfileInputShape);
+export type McpUpdateProfileInput = z.infer<typeof McpUpdateProfileSchema>;

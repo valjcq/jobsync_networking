@@ -44,6 +44,8 @@ export const AddContactFormSchema = z
     // Named for ComboBox's `case "contactRole"` create path, not for the column
     contactRole: z.string().optional(),
     notes: optionalText(2000),
+    // Set through MCP only; the Contacts form does not send it.
+    status: z.string().nullable().optional(),
     lastContactedAt: z
       .date()
       .nullable()

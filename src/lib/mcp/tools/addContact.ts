@@ -7,6 +7,7 @@ import {
   listContactIndexForUser,
 } from "@/lib/networking/contactMatch";
 import { parseDateOnly } from "@/lib/networking/dateOnly";
+import { CONTACT_STATUSES, matchContactStatus } from "@/lib/networking/contactStatus";
 import {
   resolveCompany,
   resolveContactRole,
@@ -25,6 +26,7 @@ export interface AddContactInput {
   relationship?: string;
   role?: string;
   notes?: string;
+  status?: string;
   lastContactedAt?: string;
   allowDuplicate?: boolean;
 }
@@ -48,6 +50,13 @@ export async function handleAddContact(
       ? parseDateOnly(input.lastContactedAt, "lastContactedAt")
       : null;
 
+    const status = input.status ? matchContactStatus(input.status) : null;
+    if (input.status && !status) {
+      return text(
+        `Validation error: status must be one of: ${CONTACT_STATUSES.join(", ")}`,
+      );
+    }
+
     // The Contacts form's own schema: same length limits, email and URL
     // checks, and "last contacted cannot be in the future".
     const parsed = AddContactFormSchema.safeParse({
@@ -58,6 +67,7 @@ export async function handleAddContact(
       linkedinUrl: input.linkedinUrl,
       relationship: input.relationship,
       notes: input.notes,
+      status,
       lastContactedAt,
     });
     if (!parsed.success) {

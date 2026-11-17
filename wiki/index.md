@@ -15,6 +15,7 @@ JobSync tracks job applications, resumes and the work you do around them. These 
 - [Tasks](./tasks.md) — add to-dos with a priority and due date, find them with the status filter and activity-type panel, mark them done, and start a timed activity from one.
 - [Activities](./activities.md) — time the work you do with a start/stop timer and breaks, log time after the fact, and see your hours on the Dashboard.
 - [MCP Access](./mcp.md) — connect an external AI agent such as Claude Desktop, generate and revoke access tokens, and what the agent can do once connected, including logging networking interactions.
+- [MCP Contact and Profile Tools](./mcp-contact-tools.md) — correct, merge, delete, list and bulk-add contacts and interactions through the agent, set an outreach status, and edit your own profile.
 - [MCP Tools](./mcp-tools.md) — every tool the connected agent gets: jobs, search by name, networking, todos and resume review, and what each will not do without asking you.
 
-Installation, Docker and environment variables are in the [project README](https://github.com/Gsync/jobsync#readme).
+Installation, Docker and environment variables are in the [project README](https://github.com/valjcq/jobsync_networking#readme).

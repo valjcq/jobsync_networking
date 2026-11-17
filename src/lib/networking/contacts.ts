@@ -25,6 +25,9 @@ export const toContactData = (values: ContactFormValues) => ({
   roleId: nullable(values.contactRole),
   notes: nullable(values.notes),
   lastContactedAt: values.lastContactedAt ?? null,
+  // Only written when the caller sends it: the Contacts form has no status
+  // field, so an edit there must not wipe a status set through MCP.
+  ...(values.status !== undefined ? { status: nullable(values.status) } : {}),
 });
 
 // Foreign keys prove a row exists, not that the caller owns it, so every
