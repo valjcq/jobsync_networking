@@ -48,10 +48,6 @@ export const APP_CONSTANTS = {
   COVER_LETTER_EXPORT_SETTINGS_STORAGE_KEY: "cover-letter-export-settings",
   SIDEBAR_DOM_ID: "app-sidebar",
 
-  // Update check: the upstream repo and how long a GitHub release lookup is
-  // cached. A day is plenty — releases are rare and the check is unauthenticated.
-  GITHUB_REPO: "Gsync/jobsync",
-  UPDATE_CHECK_REVALIDATE_SECONDS: 86_400,
   // Paired so the rail width and its matching content offset can't drift.
   SIDEBAR_WIDTH: {
     expanded: { rail: "w-56", contentOffset: "sm:pl-56" },

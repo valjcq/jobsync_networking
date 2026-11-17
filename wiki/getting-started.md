@@ -42,4 +42,4 @@ There is a faster route once an AI provider is set: click **Chat AI** in the hea
 
 ## Where do I find installation and Docker instructions?
 
-They are in the [project README](https://github.com/Gsync/jobsync#readme), not here. That covers running JobSync with Docker, the environment variables it reads, and how to upgrade an existing installation. These wiki pages assume you already have a running instance and cover using it.
+They are in the [project README](https://github.com/valjcq/jobsync_networking#readme), not here. That covers running JobSync with Docker, the environment variables it reads, and how to upgrade an existing installation. These wiki pages assume you already have a running instance and cover using it.

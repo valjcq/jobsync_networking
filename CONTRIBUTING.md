@@ -50,26 +50,22 @@ This project follows a [Code of Conduct](./CODE_OF_CONDUCT.md). By participating
 1. **Fork** the repository on GitHub.
 2. **Clone** your fork:
    ```bash
-   git clone https://github.com/<your-username>/jobsync.git
-   cd jobsync
+   git clone https://github.com/valjcq/jobsync_networking.git
+   cd jobsync_networking
    ```
-3. **Add the upstream remote:**
-   ```bash
-   git remote add upstream https://github.com/Gsync/jobsync.git
-   ```
-4. **Install dependencies:**
+3. **Install dependencies:**
    ```bash
    npm install
    ```
-5. **Copy the environment file and fill in your values:**
+4. **Copy the environment file and fill in your values:**
    ```bash
    cp .env.example .env
    ```
-6. **Set up the database:**
+5. **Set up the database:**
    ```bash
    npx prisma migrate dev
    ```
-7. **Start the development server:**
+6. **Start the development server:**
    ```bash
    npm run dev
    ```
@@ -81,7 +77,7 @@ This project follows a [Code of Conduct](./CODE_OF_CONDUCT.md). By participating
 There are many ways to contribute:
 
 - **Bug fixes** — Find something broken? Fix it and open a PR.
-- **Features** — Check the [open issues](https://github.com/Gsync/jobsync/issues) for ideas, or propose a new one first.
+- **Features** — Check the [open issues](https://github.com/valjcq/jobsync_networking/issues) for ideas, or propose a new one first.
 - **Documentation** — Improve README, docs, or inline code comments.
 - **Tests** — Add missing unit or e2e tests.
 - **Refactoring** — Improve code quality without changing behavior.
@@ -92,11 +88,10 @@ For significant changes or new features, **open an issue first** to discuss your
 
 ## Development Workflow
 
-1. **Sync your fork** with the latest `dev` branch before starting work:
+1. **Update your local `dev` branch** from your own remote before starting work:
    ```bash
-   git fetch upstream
    git checkout dev
-   git merge upstream/dev
+   git pull origin dev
    ```
 2. **Create a focused branch** from `dev` (see [Branch Strategy](#branch-strategy)):
    ```bash
@@ -276,7 +271,7 @@ E2E tests live in `e2e/`. These require a running dev server.
 
 ## Reporting Bugs
 
-Before filing a bug report, check if it has already been reported in the [issue tracker](https://github.com/Gsync/jobsync/issues).
+Before filing a bug report, check if it has already been reported in the [issue tracker](https://github.com/valjcq/jobsync_networking/issues).
 
 When opening a bug report, include:
 
@@ -290,7 +285,7 @@ When opening a bug report, include:
 
 ## Suggesting Features
 
-Open a [feature request issue](https://github.com/Gsync/jobsync/issues/new) with:
+Open a [feature request issue](https://github.com/valjcq/jobsync_networking/issues/new) with:
 
 1. **Problem statement** — what problem does this solve or what need does it address?
 2. **Proposed solution** — your idea for how to implement it.
@@ -302,6 +297,6 @@ Feature requests are discussed before any implementation work begins.
 
 ## Questions
 
-If you have a question that isn't answered here, feel free to open a [discussion](https://github.com/Gsync/jobsync/discussions) or an issue tagged `question`.
+If you have a question that isn't answered here, feel free to open a [discussion](https://github.com/valjcq/jobsync_networking/discussions) or an issue tagged `question`.
 
 Thank you for helping make JobSync better!

@@ -14,7 +14,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: gsync/jobsync
+  IMAGE_NAME: valjcq/jobsync_networking
 
 permissions:
   contents: read
